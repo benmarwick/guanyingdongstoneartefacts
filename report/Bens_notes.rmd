@@ -11,7 +11,7 @@ library(dplyr)
 library(knitr)
 library(readxl)
 # install.packages("readxl")
-file_name <- "artefacts (27 Jul 2016).xls" 
+file_name <- "../data/artefacts (27 Jul 2016).xls" 
 flakes <- read_excel(file_name, sheet = "flake basics")
 cores <- read_excel(file_name, sheet = "core basics")
 debris <- read_excel(file_name, sheet = "chunk&debris")
@@ -78,6 +78,8 @@ kable(type_table)
 ```
 
 A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` peices of debris were identified 
+
+
 
 
 ```{r}
@@ -164,7 +166,6 @@ TODO
 
 ```{r retouched_flakes}
 retouch$`NA` <-  NULL
-retouch$`NA` <-  NULL
 
 library(ggplot2)
 library(tidyr)
@@ -234,10 +235,13 @@ ggplot(retouch,
        aes(`retouch_diameter (for curvature)`, 
            `retouch_depth (for curvature)`)) +
   geom_point(aes(colour = as.character(cvx)))
+```
+
+```{r}
 
 # retouch sections, compute GIUR
 
-retouch$GIUR <- 
+retouch <- 
 retouch %>% 
   mutate(s1_t_T = section_1_t / section_1_T,
          s2_t_T = section_2_t / section_2_T,
@@ -246,9 +250,36 @@ retouch %>%
          s5_t_T = section_5_t / section_5_T,
          s6_t_T = section_6_t / section_6_T,
          s7_t_T = section_7_t / section_7_T,
-         s8_t_T = section_8_t / section_8_T) %>% 
-         select(dplyr::contains("_t_T")) %>% 
+         s8_t_T = section_8_t / section_8_T) 
+
+retouch$GIUR <- 
+  retouch %>% 
+         dplyr::select(dplyr::contains("_t_T")) %>% 
          rowSums(na.rm = TRUE)
+
+# average GIUR per zone
+retouch_zones <- 
+  retouch %>% 
+  summarise(s1_t_T_mean = mean(s1_t_T, na.rm = TRUE),
+            s2_t_T_mean = mean(s2_t_T, na.rm = TRUE),
+            s3_t_T_mean = mean(s3_t_T, na.rm = TRUE),
+            s4_t_T_mean = mean(s4_t_T, na.rm = TRUE),
+            s5_t_T_mean = mean(s5_t_T, na.rm = TRUE),
+            s6_t_T_mean = mean(s6_t_T, na.rm = TRUE),
+            s7_t_T_mean = mean(s7_t_T, na.rm = TRUE),
+            s8_t_T_mean = mean(s8_t_T, na.rm = TRUE))
+
+pol <- data.frame(
+x = c(1,2,2,3,4,4),
+y = c(1,1,2,2,2,3),
+g = c("a","a","a","b","b","b")
+)
+library(ggplot2)
+ggplot(pol,
+       aes(x,y,
+           group = g))  +
+  geom_polygon()
+
          
         
          
