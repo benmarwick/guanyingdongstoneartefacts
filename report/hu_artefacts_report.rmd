@@ -90,7 +90,7 @@ type_table <- rbind(type_table, c("total", count_unique_artefacts, round(sum(typ
 
 # Introduction 
 
-A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` pieces of debris were identified. Guanyindong site is located in Guizhou, China. it was excavated by 35 people in 1986.
+A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` pieces of debris were identified. Guanyindong site is located in Guizhou, China. it was excavated by 35 people in 1964. 
 
 ## Raw materials
 
