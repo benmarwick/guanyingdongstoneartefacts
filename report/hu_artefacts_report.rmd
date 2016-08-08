@@ -120,7 +120,7 @@ The assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) follo
 ## Flakes
 
 ```{r flakebasics}
-flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1)
+flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousands of flakes
 
 ```
 
@@ -130,8 +130,6 @@ The average maximum length of the flakes is `r flake_length_mean` mm
 ## Cores
 
 ## Retouched pieces
-
-### Edge types
 
 ### Indices
 
