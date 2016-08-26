@@ -90,7 +90,13 @@ type_table <- rbind(type_table, c("total", count_unique_artefacts, round(sum(typ
 
 # Introduction 
 
-A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` pieces of debris were identified. Guanyindong site is located in Guizhou, China. it was excavated by 35 people in 1964. 
+The Guanyindong site, located in  Guanyindong village, Qianxi County of Guizhou Province (26°51′26″N, 105°58′7″E) at an elevation of 1464 m a.s.l., is a limestone cave site extending from east to west it was discovered by a team organized by the institute of Vertebrate Paleontology and Paleoanthropolgy(IVPP),Chinese Academy of Sciences in 1964. Several excavations were conducted in 1965, 1972 and 1973, yeilding   A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` pieces of debris were identified. 
+
+Introduction of paleolithc research in south Asia (or China). 
+
+Introduction the distribution of levollois technique (origin, dispersion, distribution). 
+
+Prolem: East Asia, why people thought no levollois. Why studying this site is important. Aim in this study.
 
 ## Raw materials
 
@@ -135,5 +141,15 @@ The average maximum length of the flakes is `r flake_length_mean` mm
 ## Levallois 
 
 # Discussion
+
+1) Comparing with other sites in south China, Guanyindong is featured by the appearance of Levallois technique.Why do you think Gyd has levallois? Previous results from other sites in South China suggest that they have no levallois techinique (give examples and discussions)
+
+2) In the lithic assemblage, we found 59 Levallois flakes, 11 Levallois cores, with distinguishable characters from Europe and Africa(less proportion, relative more proto morphology). What are the main difference between Gyd and other sites. What is the implication of such difference. Are there any difference in the Levallois techniques in Europe and Africa or other Asia sites?
+
+3) Provide detailed discussion on the Demographic model, and explain the reason why Levallois technique in Southeast Asia is different from western. China and Southeast Asia is geographically distant from East Africa where Levallois technique is originated, as hominids dispersal from western to eastern, progressively smaller population, drastic changes of environment have made an inevitable influence on the style of Levallois technique. 
+
+4) Drawbacks (assumptions) of the model. Other possible explanation you can offer.
+
+
 
 # Conclusion
