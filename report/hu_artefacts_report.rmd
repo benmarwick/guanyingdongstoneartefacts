@@ -251,3 +251,32 @@ to cite on the demographic model: [@PremoTostevin2016; @Grovetransmission2016]
 
 
 # Conclusion
+
+# Colophon
+
+This report was generated on `r Sys.time()` using the following computational environment and dependencies:
+
+```{r}
+# which R packages and versions?
+kable(data_frame(Setting = names(devtools::session_info()$platform),
+                 Value = unname(devtools::session_info()$platform)),
+      caption = "R session information")
+```
+
+
+
+```{r}
+kable(devtools::session_info()$packages,
+      caption = "Packages that this report depends on")
+
+# what commit is this file at?
+library(git2r)
+repo <- repository(path = "../")
+last_commit <- commits(repo)[[1]]
+```
+
+The current git commit of this file is `r last_commit@sha`, which is on the `r branches(repo)[[1]]@name` branch and was made by `r last_commit@committer@name` on `r when(last_commit)`. The current commit message is "`r last_commit@summary`".
+
+# References
+
+
