@@ -12,8 +12,9 @@ bibliography: references.bib
 ```{r setup, include=FALSE}
 library(knitr)
 opts_chunk$set(echo = FALSE,
-                      warning = FALSE,
-                      message = FALSE)
+               warning = FALSE,
+               message = FALSE,
+               cache = TRUE)
 ```
 
 ```{r}
@@ -220,13 +221,56 @@ What is the local geology of the area where the site is? Mostly limestone? What 
 
 ## Flakes
 
-```{r flakebasics}
-flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousands of flakes
+As chert artefacts are most numerous, we focus our analysis on these pieces. The distributions of the basic size variables are unimodal with long right tails, indicating that most of the artefacts are small, but there are a small number of large pieces (Figure \@ref(fig:flakebasics)).
+
+```{r flakebasics, fig.cap="Summary of basic flake size variables"}
+# distributions of length, width, thickness and mass
+library(ggbeeswarm)
+flakes %>% 
+  select(length, `max dimension`, `Oriented width`, mass) %>% 
+  gather(variable, value) %>% 
+  ggplot(aes(value)) +
+  geom_density() +
+  facet_wrap(~variable,
+             scales = "free") +
+  theme_minimal() +
+  xlab("")
 
 ```
 
+```{r lengthwidth}
+lw_plot <- 
+ggplot(flakes, 
+       aes(length, 
+           `Oriented width`)) +
+  geom_point() + 
+  geom_abline(intercept=0, 
+              slope=1, 
+              colour = "red") +
+    geom_abline(intercept=0, 
+              slope=0.5, 
+              colour = "blue") +
+  coord_fixed() +
+  theme_minimal()
 
-The average maximum length of the flakes is `r flake_length_mean` mm
+widths_plot <- 
+flakes %>% 
+  select(`Width at 25% max dim`,
+         `Width at 50% max dim`,
+         `Width at 75% max dim`) %>% 
+  gather(variable, 
+         value) %>% 
+  ggplot(aes(variable, 
+         value)) +
+  geom_quasirandom(alpha = 0.1) +
+  scale_y_log10() +
+  theme_minimal()
+
+library(gridExtra)
+grid.arrange(lw_plot, widths_plot, ncol = 2)
+
+```
+
 
 ## Cores
 
