@@ -221,7 +221,7 @@ What is the local geology of the area where the site is? Mostly limestone? What 
 
 ## Flakes
 
-As chert artefacts are most numerous, we focus our analysis on these pieces. The distributions of the basic size variables are unimodal with long right tails, indicating that most of the artefacts are small, but there are a small number of large pieces (Figure \@ref(fig:flakebasics)).
+As chert artefacts are most numerous, we focus our analysis on these pieces. The distributions of the basic size variables are unimodal with long right tails, indicating that most of the artefacts are small, but there are a small number of large pieces (Figure \@ref(fig:flakebasics)). Only a small proportion of the flakes have a blade-like shape. This is indicated by the data points close to the blue line in Figure \@ref(fig:lengthwidth), which shows the ratio flake length and width as 2:1. Most flakes have their widest point at 50% of the length axis. 
 
 ```{r flakebasics, fig.cap="Summary of basic flake size variables"}
 # distributions of length, width, thickness and mass
@@ -255,13 +255,17 @@ ggplot(flakes,
 
 widths_plot <- 
 flakes %>% 
-  select(`Width at 25% max dim`,
+  select(number, 
+         `Width at 25% max dim`,
          `Width at 50% max dim`,
          `Width at 75% max dim`) %>% 
   gather(variable, 
-         value) %>% 
+         value,
+         -number) %>% 
   ggplot(aes(variable, 
          value)) +
+  geom_line(aes(group = number),
+            alpha = 0.1) +
   geom_quasirandom(alpha = 0.1) +
   scale_y_log10() +
   theme_minimal()
