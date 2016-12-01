@@ -1,0 +1,14 @@
+base
+knitr
+plyr
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+readxl
+ggbeeswarm
+gridExtra
+git2r

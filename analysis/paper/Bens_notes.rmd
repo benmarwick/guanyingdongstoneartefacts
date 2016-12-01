@@ -582,27 +582,30 @@ checkpoint::checkpoint("2016-11-30", use.knitr = TRUE)
 
 # make .Rprofile file with this in it:
 #### -- checkpoint Autoloader  -- ####
-# 
-# # set date
-# my_date <- "2016-11-30"
-# 
-# # run checkpoint
-# checkpoint::checkpoint(my_date, 
-#                        use.knitr = TRUE, 
-#                        checkpointLocation = getwd())
-# # force repos to MRAN
-# options(repos = c(CRAN = paste0("https://mran.revolutionanalytics.com/snapshot/",
-#                                 my_date)))
+
+ # set date
+ my_date <- "2016-11-30"
+ 
+ # run checkpoint
+ checkpoint::checkpoint(my_date, 
+                        use.knitr = TRUE, 
+                        checkpointLocation = getwd())
+ # force repos to MRAN
+ options(repos = c(CRAN = paste0("https://mran.revolutionanalytics.com/snapshot/",
+                                 my_date)))
 #### -- End checkpoint Autoloader -- ####
 
 # add this to .gitignore so we don't track all the check point pkgs
-# .checkpoint/*
+.checkpoint/*
 
 # checking...
 # Check that CRAN mirror is set to MRAN snapshot:n
 getOption("repos") # yes
 # Check that library path is set to ~/.checkpoint:
 normalizePath(.libPaths(), winslash = "/") # yes, ok
+
+# travis.yml just runs docker
+# dockerfile has MRAN with date hard-coded. 
 
 
 ```
