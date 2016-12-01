@@ -1,3 +1,5 @@
 box: rocker/verse:3.3.1
 build:
-  
+  steps:
+    - jimhester/r-dependencies
+    - jimhester/r-check
