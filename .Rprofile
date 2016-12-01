@@ -1,4 +1,4 @@
-#### -- checkpoint Autoloader  -- ####
+#### -- set repos to MRAN  -- ####
 
 # set date
 my_date <- "2016-11-30"
@@ -8,13 +8,9 @@ my_date <- "2016-11-30"
 options(repos = c(CRAN = paste0("https://mran.revolutionanalytics.com/snapshot/",
                                 my_date)))
 
-# knitr bug
-if("knitr" %in% rownames(utils::installed.packages()) == FALSE) {utils::install.packages("knitr")}
 
-# run checkpoint
-checkpoint::checkpoint(my_date, 
-                       use.knitr = TRUE, 
-                       auto.install.knitr = TRUE,
-                       checkpointLocation = getwd())
 
-#### -- End checkpoint Autoloader -- ####
+#### -- End set repos to MRAN -- ####
+#### -- Packrat Autoloader (version 0.4.8-1) -- ####
+source("packrat/init.R")
+#### -- End Packrat Autoloader -- ####
