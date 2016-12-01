@@ -9,7 +9,7 @@ options(repos = c(CRAN = paste0("https://mran.revolutionanalytics.com/snapshot/"
                                 my_date)))
 
 # knitr bug
-if("knitr" %in% rownames(installed.packages()) == FALSE) {install.packages("knitr")}
+if("knitr" %in% rownames(utils::installed.packages()) == FALSE) {utils::install.packages("knitr")}
 
 # run checkpoint
 checkpoint::checkpoint(my_date, 
