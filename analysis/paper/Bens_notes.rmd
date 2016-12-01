@@ -624,6 +624,7 @@ normalizePath(.libPaths(), winslash = "/") # yes, ok
 
 # install packrat
 packrat::init()
+
 # then install the necessary pkgs... then
 packrat::snapshot()
 

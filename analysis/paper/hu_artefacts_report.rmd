@@ -313,7 +313,7 @@ kable(data_frame(Setting = names(devtools::session_info()$platform),
 
 
 
-```{r}
+```{r, eval = T}
 kable(devtools::session_info()$packages,
       caption = "Packages that this report depends on")
 
@@ -321,9 +321,12 @@ kable(devtools::session_info()$packages,
 library(git2r)
 repo <- repository(path = "../..")
 last_commit <- commits(repo)[[1]]
+
+# 
 ```
 
-The current git commit of this file is `r last_commit@sha`, which is on the `r branches(repo)[[1]]@name` branch and was made by `r last_commit@committer@name` on `r when(last_commit)`. The current commit message is "`r last_commit@summary`".
+The current git commit of this file is `r last_commit@sha`, which is on the `r git2r::branches(repo)[[1]]@name` branch and was made by `r last_commit@committer@name` on `r git2r::when(last_commit)`. The current commit message is "`r last_commit@summary`".
+
 
 # References
 
