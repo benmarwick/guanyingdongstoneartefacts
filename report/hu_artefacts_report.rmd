@@ -1,4 +1,7 @@
 ---
+output: word_document
+---
+  ---
 title: "Guanyingdong Stone Artefact Assemblage Report"
 author: "HY and BM"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -21,7 +24,7 @@ library(dplyr)
 library(knitr)
 library(readxl)
 # install.packages("readxl")
-file_name <- "../data/artefacts (27 Jul 2016).xls" 
+file_name <- "artefacts_new_name.xls" 
 flakes <- read_excel(file_name, sheet = "flake basics")
 cores <- read_excel(file_name, sheet = "core basics")
 debris <- read_excel(file_name, sheet = "chunk&debris")
@@ -119,7 +122,7 @@ raw_material_tbl <- tbl_of_counts_and_props(flakes$material)
 
 ```
 
-The assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) followed by limestone (`r raw_material_tbl$Proportion[3]`%) and small amounts of basalt, sandstone and quartz. 
+The assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) followed by limestone (`r raw_material_tbl$Proportion[3]`%) and small amounts of basalt, sandstone and quartz.  In terms of retouched pieces, XXX of them are made of chert, XXX of them are made from limestone, which indicates  hominins  intended to selected chert as optimal raw material to manufacture  stone tools. Based on previous study (Li, 2009; Leng, 2001), 
 
 
 ## Flakes
@@ -130,11 +133,14 @@ flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousan
 ```
 
 
-The average maximum length of the flakes is `r flake_length_mean` mm
+We found xx complete flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is``mm. There are xxx flakes or flake breaks that have distinguishable platform, that  can be divided into cortex(%), plain(%), facet(%),dihederal(%) and focus(%).  The shapes of platform include triangle (%), fusiform (%), quadrangle (%) and CDG (%).  Most of flakes dorsal side is partially covered with cortex (%). And the average scar number is xxx. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).     
 
 ## Cores
+We found 176 cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
 
 ## Retouched pieces
+
+A total of 1101 retouched pieces were found, accounting for 48.5% of lithic assemblage. The average max dimension is xxx, 
 
 ### Indices
 
