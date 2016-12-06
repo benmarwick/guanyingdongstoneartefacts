@@ -128,6 +128,11 @@ The assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) follo
 ## Flakes
 
 ```{r flakebasics}
+names(flakes)[ncol(flakes)] <- "Comment"
+n_complete_flakes <-
+flakes %>% 
+filter(grepl("brk|break|proximal", type))
+
 flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousands of flakes
 
 ```
