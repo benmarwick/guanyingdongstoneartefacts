@@ -140,11 +140,12 @@ We found 176 cores in the lithic assemblage. According to the number of platform
 
 ## Retouched pieces
 
-A total of 1101 retouched pieces were found, accounting for 48.5% of lithic assemblage. The average max dimension is xxx, 
+A total of 1101 retouched pieces were found, accounting for 48.5% of lithic assemblage. The average max dimension is xxx. % retouched pieces are made on flakes (%) and flake breaks (%), others are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Convex edge constitutes the largest proportion of the edge shapes of side scrapers(%). Looking at the location of retouch and the size of the retouched flakes can provide us further insight into retouching behaviours. Most of tools have more than one retouched edges.  We introduced two concepts “Zone Index” and “Geometric Index of Unifacial Reduction(GIUR)” to estimate the invasion and intensity of retouching. From our observation… We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer side of the piece.  
 
 ### Indices
 
 ## Levallois 
+We distinguished 70 stone artifacts that are Levallois like including 11 Levallois cores, 22 flakes, 4 points and 33 tools made on levallois flakes. The average dimension of levallois products is xxx which is smaller (or larger) than ordinary products. The platform shapes of levallois flakes are various ranging from triangle, quadrangle, fusiformis to chapeau de gendarme(CDG). For flakes, we measured the thickness at 25%, 50%, 70% max dimension and compared them with ordinary flakes found that levallois flakes are relatively more flat. This found is consistent with the theory that ... The scar number is also relatively more than ordinary flakes, the direction of which is mostly centripetal. 
 
 # Discussion
 
