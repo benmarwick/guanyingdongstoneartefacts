@@ -566,3 +566,69 @@ plain_flakes %>%
 # look at CV of metric variables by size groups
 
 ```
+
+Setting up:
+
+```{r eval = FALSE}
+
+## -----------------------------------------------------------------------
+# try checkpoint
+
+# start with this to set a date for the packages that we use
+# from the project root directory
+checkpoint::checkpoint("2016-11-30", use.knitr = TRUE, 
+                       checkpointLocation = getwd())
+# then, so checkpoint can see inside the Rmd...
+install.packages("knitr")
+# then again, and it will get from MRAN all the pkgs mentioned in the Rmd 
+checkpoint::checkpoint("2016-11-30", use.knitr = TRUE)
+
+# make .Rprofile file with this in it:
+#### -- checkpoint Autoloader  -- ####
+
+ # set date
+ my_date <- "2016-11-30"
+
+ # force repos to MRAN
+ options(repos = c(CRAN = paste0("https://mran.revolutionanalytics.com/snapshot/",
+                                 my_date)))
+ 
+ # knitr bug, check if knitr is installed, if not, then install
+ require("knitr")
+ 
+ # run checkpoint
+ checkpoint::checkpoint(my_date, 
+                        use.knitr = TRUE, 
+                        checkpointLocation = getwd())
+
+#### -- End checkpoint Autoloader -- ####
+
+# add this to .gitignore so we don't track all the check point pkgs
+.checkpoint/*
+
+# checking...
+# Check that CRAN mirror is set to MRAN snapshot:n
+getOption("repos") # yes
+# Check that library path is set to ~/.checkpoint:
+normalizePath(.libPaths(), winslash = "/") # yes, ok
+
+# travis.yml just runs docker
+# dockerfile has MRAN with date hard-coded. 
+# This is no good because checkpoint cannot access the Rmd files
+
+## ---------------------------------------------------------------------------
+
+# try packrat
+
+# So back to packrat, keeping MRAN and date in .Rprofile
+
+# install packrat
+packrat::init()
+
+# then install the necessary pkgs... then
+packrat::snapshot()
+
+
+```
+
+

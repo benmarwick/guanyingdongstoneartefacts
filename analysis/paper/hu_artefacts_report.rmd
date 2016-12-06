@@ -1,0 +1,333 @@
+---
+title: "Guanyingdong Stone Artefact Assemblage Report"
+author: "HY and BM"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+   bookdown::word_document2:
+    fig_caption: yes
+    reference_docx: templates/template.docx
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = FALSE,
+               warning = FALSE,
+               message = FALSE,
+               cache = TRUE)
+```
+
+```{r}
+# read in the data
+library(plyr)
+library(tidyverse)
+library(readxl)
+
+# install.packages("readxl")
+file_name <- "../data/artefacts (26_07_2016).xls" 
+flakes <- read_excel(file_name, sheet = "flake basics")
+cores <- read_excel(file_name, sheet = "core basics")
+debris <- read_excel(file_name, sheet = "chunk&debris")
+retouch <- read_excel(file_name, sheet = "retouch")
+notch <- read_excel(file_name, sheet = "notches")
+edge_angle <- read_excel(file_name, sheet = "edge angle")
+core_scars <- read_excel(file_name, sheet = "core flake scars")
+```
+
+```{r cleanflakedata}
+# tidy the flakes so we can find the retouch pieces easily
+# what ways was retouch recorded?
+ways_that_retouch_entered <- unique(grep("ret|lev", 
+                                         flakes$type, 
+                                         value = TRUE))
+
+# so we can get the retouched pieces like this:
+flakes$retouched <- ifelse(grepl("ret|lev", flakes$type), "retouched", "unretouched")
+
+# how many retouched in 'flake  basics' sheet? how many retouched in 'retouch' sheet?
+different_in_retouch_counts <- 
+  length(flakes$retouched) - length(retouch$number)
+# So we are missing some detailed information on the retouch of about 191
+# retouched artefacts that are recorded in the 'flake  basics' sheet, but 
+# not in the 'retouch' sheet. Not much we can do about. 
+
+
+# Let's join on the retouch and notch data onto the flake basics sheet
+flakes <- 
+flakes %>% 
+  left_join(., retouch) %>% 
+  left_join(., notch)
+  
+
+# are the artefact numbers really unique?
+# sum(duplicated(flakes$number))
+# extract duplicated flakes 
+flakes_duplicated <- flakes[ duplicated(flakes$number), ]
+
+# remove from original data
+flakes <- flakes[!duplicated(flakes$number), ]
+
+# update the artefact ID so it's not duplicate
+# find out how many of each duplicate we have
+flakes_duplicated <- 
+flakes_duplicated %>% 
+  group_by(number) %>% 
+  mutate(duplicate_number = 1:length(number)) %>% 
+  ungroup
+# update 'number' column
+flakes_duplicated$number <- 
+  paste0(flakes_duplicated$number, "_", flakes_duplicated$duplicate_number)
+# remove duplicate_number so we can bind back to the flake basics
+flakes_duplicated$duplicate_number <- NULL
+
+# put back into original data 
+flakes <- rbind(flakes, 
+                flakes_duplicated)
+
+# so now we've got flakes and retouch together in one sheet, and the 'numbers' are unique for each flake and retouched piece. 
+```
+
+```{r cleandebris}
+# what about debris? Are any of the retouch or notch pieces also listed in debris?
+
+debris <- 
+debris %>% 
+  left_join(., retouch) %>% 
+  left_join(., notch) %>% 
+  mutate(retouched = ifelse(is.na(section_1_t), "unretouched", "retouched"))
+
+
+# we do have some retouch and notched pieces in there also, don't forget them!
+```
+
+
+```{r artefacttypecount}
+# How many of each type of artefact?
+artefact_types_df <- 
+stack(list(Cores = cores$number,
+     Flakes = flakes[flakes$retouched == "unretouched", ]$number,
+     Retouched = c(retouch$number, notch$number),
+     Debris = debris[debris$retouched == "unretouched", ]$number))
+# make sensible column names
+names(artefact_types_df) <- c("number", "Artefact type")
+# factor to character, for convienience
+artefact_types_df$`Artefact type` <- as.character(artefact_types_df$`Artefact type`)
+
+# how many of each type?
+table_of_type_counts <- 
+artefact_types_df %>% 
+  group_by(`Artefact type`)  %>% 
+  tally() %>% 
+  mutate(Percentage = round(n/sum(n) * 100, 1)) %>% 
+  rename(Frequency = n) %>% 
+  arrange(desc(Percentage)) %>% 
+  rbind(c("Total", sum(.$Frequency), round(sum(.$Percentage, 0)))) 
+
+# extract individual values to use in the text
+n_total <- table_of_type_counts[table_of_type_counts$`Artefact type` == "Total",]$Frequency
+n_cores <- table_of_type_counts[table_of_type_counts$`Artefact type` == "Cores",]$Frequency
+n_flakes <- table_of_type_counts[table_of_type_counts$`Artefact type` == "Flakes",]$Frequency
+n_retouch <- table_of_type_counts[table_of_type_counts$`Artefact type` == "Retouched",]$Frequency
+n_debris <- table_of_type_counts[table_of_type_counts$`Artefact type` == "Debris",]$Frequency
+```
+
+
+# Introduction 
+
+Introduction of paleolithc research in south Asia (or China). 
+
+to cite: [@YangXiaochangliang2016; @KatoChinaUP2016; @Liblades2016]
+
+Introduction the distribution of Levallois technique (origin, dispersion, distribution). And specifically in China: XX said there was Levallois in China at YYY site... ZZZ said there was no Levallois in China at WWW site, etc. 
+
+Problem: East Asia, why people thought no Levallois Why studying this site is important. Aim in this study.
+
+# The Guanyindong site
+
+The Guanyindong site, located in  Guanyindong village, Qianxi County of Guizhou Province (26°51′26″N, 105°58′7″E) at an elevation of 1464 m a.s.l., is a limestone cave site extending from east to west it was discovered by a team organized by the institute of Vertebrate Paleontology and Paleoanthropolgy (IVPP),Chinese Academy of Sciences in 1964. Several excavations were conducted in 1965, 1972 and 1973...
+
+some more detail needed about these previous excavations, citation to the reports, summary of main findings from the previous work...
+
+# Stone artefact assemblage
+
+Our analysis collected data on `r n_total` artefacts from the previous excavations at Guanyindong. At the time of our analysis, the artefacts were stored at the IVPP, Bejin, China. These artefacts come from the 19XX and 19XX excavations. The artefacts from the 19XX excavations (approximaltely XX pieces) were not available for analysis. A total of `r n_cores` cores, `r n_flakes` unretouched flakes, `r n_retouch` retouched pieces (including retouched flakes) and `r n_debris` pieces of debris were identified (Table \@ref(tab:artefacttypecounttbl)).
+
+```{r artefacttypecounttbl}
+# print nice table in the paper                       
+kable(table_of_type_counts,
+      caption = "Summary of artefact type abundance at Guanyindong")
+```
+
+## Raw materials
+
+```{r allrawmaterials}
+raw_materials_df <- 
+stack(list( # core raw materials
+            Cores = cores$material,
+            # plain flake raw materials
+            Flakes = flakes[flakes$retouched == 'unretouched',]$material,
+            # retouch flake raw materials (most, but not all of them)
+            Retouched = flakes[flakes$retouched == 'retouched',]$material,
+            # debris raw material
+            Debris = debris$material))
+# make sensible column names
+names(raw_materials_df) <- c("Raw material", "Artefact type")
+# factor to character, for convienience
+raw_materials_df$`Artefact type` <- as.character(raw_materials_df$`Artefact type`)
+
+# tally
+raw_materials_df_tally <- 
+raw_materials_df %>% 
+  # correct a typo in quartz
+  mutate(`Raw material` = ifelse(`Raw material` == 'qutz', 
+                                 "quartz", 
+                                 `Raw material`)) %>% 
+  # remove NAs
+  filter(!is.na(`Raw material`)) %>% 
+  # group, tally, spread to make a nice table
+  group_by(`Artefact type`, `Raw material`) %>% 
+  tally()  
+
+# data to use in text
+raw_materials_df_tally_summary <- 
+raw_materials_df_tally %>%  
+  group_by(`Raw material`) %>% 
+  summarise(Count = sum(n)) %>% 
+  mutate(Percentage = round(Count/sum(Count) * 100, 1)) %>% 
+  arrange(desc(Percentage))
+  
+# proportion of chert & limestone
+prop_cert <- raw_materials_df_tally_summary[raw_materials_df_tally_summary$`Raw material` == 'chert', ]$Percentage
+prop_limestone <- raw_materials_df_tally_summary[raw_materials_df_tally_summary$`Raw material` == 'limestone', ]$Percentage
+
+
+```
+
+The assemblage is dominated by chert (`r prop_cert`%) followed by limestone (`r prop_limestone`%) and small amounts of basalt, sandstone and quartz (Table \@ref(tab:rawmaterialsdftblchk)). 
+
+
+```{r rawmaterialsdftblchk}
+# spread the table out by raw material so it's easy to read
+raw_materials_df_tbl <- 
+  spread(raw_materials_df_tally, `Raw material`, n, fill = 0)
+# display the table
+kable(raw_materials_df_tbl, 
+      caption = "Summary of raw materials at Guanyingdong")
+```
+
+What is the local geology of the area where the site is? Mostly limestone? What about nearby rivers? We need some detail about that here, ok to get it from previous reports, but do not the words copy directly, and need to cite
+
+
+
+## Flakes
+
+As chert artefacts are most numerous, we focus our analysis on these pieces. The distributions of the basic size variables are unimodal with long right tails, indicating that most of the artefacts are small, but there are a small number of large pieces (Figure \@ref(fig:flakebasics)). Only a small proportion of the flakes have a blade-like shape. This is indicated by the data points close to the blue line in Figure \@ref(fig:lengthwidth), which shows the ratio flake length and width as 2:1. Most flakes have their widest point at 50% of the length axis. 
+
+```{r flakebasics, fig.cap="Summary of basic flake size variables"}
+# distributions of length, width, thickness and mass
+library(ggbeeswarm)
+flakes %>% 
+  select(length, `max dimension`, `Oriented width`, mass) %>% 
+  gather(variable, value) %>% 
+  ggplot(aes(value)) +
+  geom_density() +
+  facet_wrap(~variable,
+             scales = "free") +
+  theme_minimal() +
+  xlab("")
+
+```
+
+```{r lengthwidth}
+lw_plot <- 
+ggplot(flakes, 
+       aes(length, 
+           `Oriented width`)) +
+  geom_point() + 
+  geom_abline(intercept=0, 
+              slope=1, 
+              colour = "red") +
+    geom_abline(intercept=0, 
+              slope=0.5, 
+              colour = "blue") +
+  coord_fixed() +
+  theme_minimal()
+
+widths_plot <- 
+flakes %>% 
+  select(number, 
+         `Width at 25% max dim`,
+         `Width at 50% max dim`,
+         `Width at 75% max dim`) %>% 
+  gather(variable, 
+         value,
+         -number) %>% 
+  ggplot(aes(variable, 
+         value)) +
+  geom_line(aes(group = number),
+            alpha = 0.1) +
+  geom_quasirandom(alpha = 0.1) +
+  scale_y_log10() +
+  theme_minimal()
+
+library(gridExtra)
+grid.arrange(lw_plot, widths_plot, ncol = 2)
+
+```
+
+
+## Cores
+
+## Retouched pieces
+
+### Indices
+
+## Levallois 
+
+# Discussion
+
+1) Comparing with other sites in south China, Guanyindong is featured by the appearance of Levallois technique.Why do you think Gyd has levallois? Previous results from other sites in South China suggest that they have no levallois techinique (give examples and discussions)
+
+2) In the lithic assemblage, we found 59 Levallois flakes, 11 Levallois cores, with distinguishable characters from Europe and Africa(less proportion, relative more proto morphology). What are the main difference between Gyd and other sites. What is the implication of such difference. Are there any difference in the Levallois techniques in Europe and Africa or other Asia sites?
+
+3) Provide detailed discussion on the Demographic model, and explain the reason why Levallois technique in Southeast Asia is different from western. China and Southeast Asia is geographically distant from East Africa where Levallois technique is originated, as hominids dispersal from western to eastern, progressively smaller population, drastic changes of environment have made an inevitable influence on the style of Levallois technique. 
+
+to cite on the demographic model: [@PremoTostevin2016; @Grovetransmission2016]
+
+4) Drawbacks (assumptions) of the model. Other possible explanation you can offer.
+
+
+
+# Conclusion
+
+# Colophon
+
+This report was generated on `r Sys.time()` using the following computational environment and dependencies:
+
+```{r}
+# which R packages and versions?
+kable(data_frame(Setting = names(devtools::session_info()$platform),
+                 Value = unname(devtools::session_info()$platform)),
+      caption = "R session information")
+```
+
+
+
+```{r, eval = T}
+kable(devtools::session_info()$packages,
+      caption = "Packages that this report depends on")
+
+# what commit is this file at?
+library(git2r)
+repo <- repository(path = "../..")
+last_commit <- commits(repo)[[1]]
+
+# 
+```
+
+The current git commit of this file is `r last_commit@sha`, which is on the `r git2r::branches(repo)[[1]]@name` branch and was made by `r last_commit@committer@name` on `r git2r::when(last_commit)`. The current commit message is "`r last_commit@summary`".
+
+
+# References
+
+

@@ -1,0 +1,9 @@
+Package: guanyingdongstoneartefacts
+Title: Analysis of stone artefact from Guanyingdong, China
+Version: 0.0.0.9000
+Authors@R: person("Ben", "Mawick", email = "benamarwick@gmail.com", role = c("aut", "cre"))
+Description: Code and data for the analysis 
+Depends: R (>= 3.3.1)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
