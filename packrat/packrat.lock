@@ -8,6 +8,21 @@ Repos: BioCsoft=https://bioconductor.org/packages/3.3/bioc,
     CRAN=https://mran.revolutionanalytics.com/snapshot/2016-11-30,
     CRANextra=https://www.stats.ox.ac.uk/pub/RWin
 
+Package: BH
+Source: CRAN
+Version: 1.62.0-1
+Hash: 14dfb3e8ffe20996118306ff4de1fab2
+
+Package: DBI
+Source: CRAN
+Version: 0.5-1
+Hash: 375869004db963f9915f2b8a49b4a718
+
+Package: R6
+Source: CRAN
+Version: 2.2.0
+Hash: 712773a3439bd32db5c40938e1a9aac2
+
 Package: Rcpp
 Source: CRAN
 Version: 0.12.8
@@ -44,6 +59,12 @@ Package: digest
 Source: CRAN
 Version: 0.6.10
 Hash: 87165608ca8aeb0958835c3c5b52b6b7
+
+Package: dplyr
+Source: CRAN
+Version: 0.5.0
+Hash: 3dcd1c1192d66441a627252b535e5cc2
+Requires: BH, DBI, R6, Rcpp, assertthat, lazyeval, magrittr, tibble
 
 Package: evaluate
 Source: CRAN
@@ -108,6 +129,18 @@ Package: packrat
 Source: CRAN
 Version: 0.4.8-1
 Hash: 6ad605ba7b4b476d84be6632393f5765
+
+Package: plyr
+Source: CRAN
+Version: 1.8.4
+Hash: fee2f470d73a85f4db7e89d771427e57
+Requires: Rcpp
+
+Package: readxl
+Source: CRAN
+Version: 0.1.1
+Hash: a80e2ef94a7228ec43d840fcb2792bc6
+Requires: Rcpp
 
 Package: rmarkdown
 Source: github

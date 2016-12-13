@@ -1,7 +1,4 @@
 ---
-output: word_document
----
-  ---
 title: "Guanyingdong Stone Artefact Assemblage Report"
 author: "HY and BM"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -15,6 +12,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE,
                       message = FALSE)
+
 ```
 
 ```{r}
@@ -119,6 +117,13 @@ tbl_of_counts_and_props <- function(x){
 }
 
 raw_material_tbl <- tbl_of_counts_and_props(flakes$material)
+
+# raw materials of retouch pieces
+retouch_flake_details <- 
+flakes %>% 
+left_join(retouch) %>% 
+filter(!is.na(`number of layers`))
+
 
 ```
 
