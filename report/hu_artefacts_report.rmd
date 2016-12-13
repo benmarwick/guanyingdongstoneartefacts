@@ -77,7 +77,6 @@ count_unique_artefacts <- sum(unlist(totals_of_each_type))
 debris_with_retouch <- intersect(artefact_ids$retouch_ids, artefact_ids$debris_ids)
 proportion_debris_retouched <- length(debris_with_retouch) / count_unique_artefacts 
 # proportion of each type
-library(knitr)
 type_table <- data.frame(type = names(as.data.frame(totals_of_each_type)),
                          count = as.numeric(as.data.frame(totals_of_each_type)),
                          proportion = round(as.numeric(prop.table(as.data.frame(totals_of_each_type))),3))
@@ -137,7 +136,7 @@ The assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) follo
 names(flakes)[30] <- "comment"
 complete_flakes <- 
 flakes %>% 
-  filter(!grepl("brk|break|proximal|ret|retouch|pebble", type))
+  filter(!grepl("brk|break|proximal|ret|retouch|pebble|tanged", type))
 n_complete_flakes <- nrow(complete_flakes)
 
 flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousands of flakes
@@ -153,7 +152,8 @@ arrange(desc(perc))
 
 cortex_plat_perc <- flakes_platforms[flakes_platforms$platform == "cotex", ]$perc
 plain_plat_perc <- flakes_platforms[flakes_platforms$platform == "plain", ]$perc
-xxx_plat_perc <- flakes_platforms[flakes_platforms$platform == "xxx", ]$perc
+dihederal_plat_perc <- flakes_platforms[flakes_platforms$platform == "dihederal", ]$perc
+facet_plat_perc <- flakes_platforms[flakes_platforms$platform == "facet", ]$perc
 
 flakes_platform_shape <- 
 flakes %>% 
@@ -166,12 +166,14 @@ arrange(desc(perc))
 
 triangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "triangle", ]$perc
 
-xxx_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "xx", ]$perc
+fusiform_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "sx", ]$perc
+quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "sb", ]$perc
+CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "CDG", ]$perc
 
 ```
 
 
-We found `r n_complete_flakes` complete unretouched flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is``mm. There are `r sum(flake_platform$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (%), dihederal (%) and focus (%).  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (%), quadrangle (%) and CDG (%).  Most of flakes dorsal side is partially covered with cortex (%). And the average scar number is xxx. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).     
+We found `r n_complete_flakes` complete unretouched flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is``mm. There are `r sum(flake_platform$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform _platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  Most of flakes dorsal side is partially covered with cortex (%). And the average scar number is xxx. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).     
 
 ## Cores
 We found 176 cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
