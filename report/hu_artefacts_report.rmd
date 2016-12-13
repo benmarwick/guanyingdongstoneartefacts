@@ -127,6 +127,7 @@ The assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) follo
 ## Flakes
 
 ```{r flakebasics}
+
 names(flakes)[30] <- "comment"
 complete_flakes <- 
 flakes %>% 
