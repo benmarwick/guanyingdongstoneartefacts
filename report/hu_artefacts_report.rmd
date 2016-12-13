@@ -143,6 +143,7 @@ n_complete_flakes <- nrow(complete_flakes)
 
 flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousands of flakes
 
+# Flake platforms
 flakes_platforms <- 
 flakes %>% 
 filter(!grepl("NA|0.000000|42.000000|mis", platform)) %>% filter(!grepl("ret|retouch|pebble", type)) %>% 
@@ -152,6 +153,7 @@ filter(!is.na(platform)) %>%
 mutate(perc = round(n/sum(n),3) * 100) %>% 
 arrange(desc(perc))
 
+# percentage of each platform type
 cortex_plat_perc <- flakes_platforms[flakes_platforms$platform == "cotex", ]$perc
 plain_plat_perc <- flakes_platforms[flakes_platforms$platform == "plain", ]$perc
 dihederal_plat_perc <- flakes_platforms[flakes_platforms$platform == "dihederal", ]$perc
@@ -174,17 +176,21 @@ quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform
 
 CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "CDG", ]$perc
 
+# dorsal flake cortex
+flake_cortex_perc <- flakes$`cortex percentage`[!is.na(flakes$`cortex percentage`)]
+flakes_with_20pc_cortex <- round(sum(flake_cortex_perc <= 20) / length(flake_cortex_perc) * 100, 1)
+
 # dorsal flake scars
 # we only want flakes that have 0 or more scars, no NA values
 flake_scar_numbers <- flakes$`scar number`[!is.na(flakes$`scar number`)]
 dorsal_flake_scar_mean <- round(mean(flake_scar_numbers), 2)
 dorsal_flake_scar_sd <- round(sd(flake_scar_numbers), 2)
-# looking at hist(flakes$`scar number`) I see that most flakes have 3 or fewer scars
+# looking at hist(flake_scar_numbers) I see that most flakes have 3 or fewer scars
 # so we can say
-flakes_with_3_or_less_scars <- round(sum(flake_scar_numbers <= 3) / length(flake_scar_numbers) * 100, 1)
+flakes_with_4_or_less_scars <- round(sum(flake_scar_numbers <= 4) / length(flake_scar_numbers) * 100, 1)
 # what about the relationship between number of flake scars and artefact size?
-with(flakes, summary(lm(`scar number` ~ mass)))
-with(flakes, plot(`scar number`, mass))
+cor_flake_scars_and_mass <- 
+with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
 
 # directions of flake scars
 
@@ -192,10 +198,27 @@ with(flakes, plot(`scar number`, mass))
 ```
 
 
-We found `r n_complete_flakes` complete unretouched flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is mm. There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  Most of flakes dorsal side is partially covered with cortex (%). The average number of dorsal flake scars is `r dorsal_flake_scar_mean`, with a standard deviation of `r dorsal_flake_scar_sd`, and `r flakes_with_3_or_less_scars`% of flakes have less than three scars. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).     
+We found `r n_complete_flakes` complete unretouched flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is mm. There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  For most flakes the dorsal side is partially covered with cortex, with  `r flakes_with_20pc_cortex`% of flakes with 20% or less cortical surface on the dorsal face. The average number of dorsal flake scars is `r dorsal_flake_scar_mean`, with a standard deviation of `r dorsal_flake_scar_sd`, and `r flakes_with_4_or_less_scars`% of flakes have less than four scars. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).  
+
+```{r cores}
+
+# number of platforms on cores
+cores_platform_numbers <- 
+  cores %>% 
+  select(platform) %>% 
+  group_by(platform) %>% 
+  tally() %>% 
+  filter(!is.na(platform)) %>% 
+  mutate(perc = round(n / sum(n) * 100, 1))
+
+single_platform <- cores_platform_numbers$perc[cores_platform_numbers$platform == 1]
+
+
+```
+
 
 ## Cores
-We found 176 cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
+We found `r nrow(cores)` cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (`r single_platform`%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
 
 ## Retouched pieces
 
