@@ -136,6 +136,12 @@ Version: 1.8.4
 Hash: fee2f470d73a85f4db7e89d771427e57
 Requires: Rcpp
 
+Package: purrr
+Source: CRAN
+Version: 0.2.2
+Hash: 883eb391742d94eb62d05aa8c5055211
+Requires: BH, Rcpp, dplyr, lazyeval, magrittr
+
 Package: readxl
 Source: CRAN
 Version: 0.1.1
