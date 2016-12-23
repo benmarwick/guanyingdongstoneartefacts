@@ -187,15 +187,17 @@ retouch_flake_details <-
 flakes %>% 
 left_join(retouch) %>% 
 filter(!is.na(`number of layers`))
+# how many chert flakes?
+chert_flake<- flakes$material
 
 
 ```
 
 Previous research reported that the stone artefacts are preliminarily made of siliceous limestone, In my observation,the majority of siliceous limestone is caterageted as chert, therefore, from my observation the assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) followed by limestone (`r raw_material_tbl$Proportion[3]`%) and small amounts of basalt, sandstone and quartz. Although the chert selected varies slightly from color to texture, sub-classification is not conducted due to the consistence of their physical properties.
 
-The raw material source are mostly from local area that no further than 10km based on Leng and Li's investigation.One possible chert source, located about 4km(stright distence) is called Jinyan hill, where chert nodules are exposed on surface(Leng, 2001).For limestone and volcanic rocks like basalt and quartz are all from local mountain, river bed and exposed layers. Leng also found that the natural chert, volcanic rock, and siliceous limestone nodules were generally larger than specimen from GYD. According to source investigation, acient flintknappers were inclined to obtain raw material locally and traverl short distence to get access to raw material, besides, they were aware of raw material sllection indicated by the preference of chert as main  
+The raw material source are mostly from local area that no further than 10km based on Leng and Li's investigation.One possible chert source, located about 4km(stright distence) is called Jinyan hill, where chert nodules are exposed on surface(Leng, 2001).For limestone and volcanic rocks like basalt and quartz are all from local mountain, river bed and exposed layers. The majority of raw material are accessable within 6km(Li, 2009) suggesting  an relative small foraging territory. Leng also found that the natural chert, volcanic rock, and siliceous limestone nodules were generally larger than specimen from GYD. According to source investigation, acient flintknappers were inclined to obtain raw material locally and traverl short distence to get access to raw material, besides, they were aware of raw material sellection indicated by the preference of chert, which is easier control and has better flaking property as main knapping object. It also suggests that their foraging radius allows them to collect raw material and return to cave without overnight stop. 
 
-the In terms of retouched pieces, XXX of them are made of chert, XXX of them are made from limestone, which indicates  hominins  intended to selected chert as optimal raw material to manufacture  stone tools. Based on previous study (Li, 2009; Leng, 2001), 
+There are % chert falkes were retouched into stone tools indicating an efficient exploit of this raw material, although it can be easily obtained nearby. the In terms of retouched pieces, XXX of them are made of chert, XXX of them are made from limestone, which indicates  hominins  intended to selected chert as optimal raw material to manufacture  stone tools. Based on previous study (Li, 2009; Leng, 2001), 
 
 
 ## Flakes
@@ -208,7 +210,9 @@ flakes %>%
   filter(!grepl("brk|break|proximal|ret|retouch|pebble|tanged", type))
 n_complete_flakes <- nrow(complete_flakes)
 
-flake_length_mean <- round(mean(flakes$mass, na.rm = TRUE),1) #there are thousands of flakes
+flake_length_mean <- round(mean(flakes$length, na.rm = TRUE),1) #there are thousands of flakes
+flake_thick_mean <- round(mean(flakes$`Oriented thickness`, na.rm = TRUE),1)
+
 
 flakes_platforms <- 
 flakes %>% 
@@ -256,13 +260,37 @@ flake_cortex_percentage <- flakes$`cortex percentage`[!is.na(flakes$`cortex perc
 
 flakes_with_10_or_less_cortex<- sum(flake_cortex_percentage <= 10 )/length(flake_cortex_percentage)*100
 
+# scar direction
+
+#how many flakes have same scar direction (scar_direction == 1)
+
+as.numeric(scar_direction[,2:11])
+
+scar_direction[scar_direction == "?"] = "100"
+
+flakes_same_scar_direction = length(which(apply(scar_direction[, 2:11], 1, function(r) any(r == 1))))
+
+# Thichness for flakes, by platform shape
+
+new_flakes <- flakes[flakes$`platform shape` %in% c("CDG", "triangle", "sb", "sx"), ]
+
+new_flakes[new_flakes == "sb"] = "quadrangle"
+
+new_flakes[new_flakes == "sx"] = "fusiform"
+
+ggplot(new_flakes, aes(`Thickness at 25% max dim`, colour = `platform shape`)) +
+  geom_density()
 
 
 ```
 
 
-We found `r n_complete_flakes` complete unretouched flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is mm. There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  Most of flakes dorsal side is partially covered with cortex (%). And the average scar number is `r average_scar_number` and the standard deviation is `r sd_scar_number`. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).     
+We found `r n_complete_flakes` complete unretouched flakes and 1292 flake pieces including complete flake, retouched flake, flake breaks and retouched flake breaks. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  % of flakes dorsal side is partially covered with cortex. Most of The cortex are limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scar number count the largest proportion.`r flakes_with_4_or_less_scars`% flakes have scar number less than 4. It suggest that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  Among them, % flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%).chart? shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
 
+```{r corebasics}
+
+
+```
 ## Cores
 We found 176 cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
 
