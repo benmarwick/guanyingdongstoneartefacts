@@ -21,6 +21,7 @@ library(plyr)
 library(dplyr)
 library(knitr)
 library(readxl)
+<<<<<<< HEAD
 library(ggplot2)
 library(tidyr)
 # install.packages("readxl")
@@ -30,6 +31,16 @@ cores <- read_excel(file_name, sheet = "core basics")
 debris <- read_excel(file_name, sheet = "chunk&debris")
 retouch <- read_excel(file_name, sheet = "retouch")
 scar_direction <- read_excel(file_name, sheet = "scar direction ")
+=======
+library(purrr)
+# install.packages("readxl")
+file_name <- "artefacts_new_name.xls" 
+quiet_read <- purrr::quietly(readxl::read_excel)
+flakes <- quiet_read(file_name, sheet = "flake basics")$result
+cores <- quiet_read(file_name, sheet = "core basics")$result
+debris <- quiet_read(file_name, sheet = "chunk&debris")$result
+retouch <- quiet_read(file_name, sheet = "retouch")$result
+>>>>>>> fe8e527d60457b313c402c7065ae4f886d8e1fc2
 ```
 
 ```{r eval=TRUE, echo=FALSE}
@@ -148,6 +159,9 @@ type_table <- data.frame(type = names(as.data.frame(totals_of_each_type)),
 type_table$type <- as.character(type_table$type)
 
 type_table <- rbind(type_table, c("total", count_unique_artefacts, round(sum(type_table$proportion),2)))
+# total number of artefacts
+total_number_of_artefacts <- as.numeric(type_table$count[type_table$type == "total"])
+
 # print pretty table                         
 # kable(type_table)
 ```
@@ -214,6 +228,7 @@ flake_length_mean <- round(mean(flakes$length, na.rm = TRUE),1) #there are thous
 flake_thick_mean <- round(mean(flakes$`Oriented thickness`, na.rm = TRUE),1)
 
 
+# Flake platforms
 flakes_platforms <- 
 flakes %>% 
 filter(!grepl("NA|0.000000|42.000000|mis", platform)) %>% filter(!grepl("ret|retouch|pebble", type)) %>% 
@@ -223,6 +238,7 @@ filter(!is.na(platform)) %>%
 mutate(perc = round(n/sum(n),3) * 100) %>% 
 arrange(desc(perc))
 
+# percentage of each platform type
 cortex_plat_perc <- flakes_platforms[flakes_platforms$platform == "cotex", ]$perc
 plain_plat_perc <- flakes_platforms[flakes_platforms$platform == "plain", ]$perc
 dihederal_plat_perc <- flakes_platforms[flakes_platforms$platform == "dihederal", ]$perc
@@ -240,9 +256,12 @@ arrange(desc(perc))
 triangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "triangle", ]$perc
 
 fusiform_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "sx", ]$perc
+
 quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "sb", ]$perc
+
 CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "CDG", ]$perc
 
+<<<<<<< HEAD
 is.na(flakes$`scar number`)
 
 !is.na(flakes$`scar number`)
@@ -280,23 +299,68 @@ new_flakes[new_flakes == "sx"] = "fusiform"
 
 ggplot(new_flakes, aes(`Thickness at 25% max dim`, colour = `platform shape`)) +
   geom_density()
+=======
+# dorsal flake cortex
+flake_cortex_perc <- flakes$`cortex percentage`[!is.na(flakes$`cortex percentage`)]
+flakes_with_20pc_cortex <- round(sum(flake_cortex_perc <= 20) / length(flake_cortex_perc) * 100, 1)
+
+# dorsal flake scars
+# we only want flakes that have 0 or more scars, no NA values
+flake_scar_numbers <- flakes$`scar number`[!is.na(flakes$`scar number`)]
+dorsal_flake_scar_mean <- round(mean(flake_scar_numbers), 2)
+dorsal_flake_scar_sd <- round(sd(flake_scar_numbers), 2)
+# looking at hist(flake_scar_numbers) I see that most flakes have 3 or fewer scars
+# so we can say
+flakes_with_4_or_less_scars <- round(sum(flake_scar_numbers <= 4) / length(flake_scar_numbers) * 100, 1)
+# what about the relationship between number of flake scars and artefact size?
+cor_flake_scars_and_mass <- 
+with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
+
+# directions of flake scars
+>>>>>>> fe8e527d60457b313c402c7065ae4f886d8e1fc2
 
 
 ```
 
 
+<<<<<<< HEAD
 We found `r n_complete_flakes` complete unretouched flakes and 1292 flake pieces including complete flake, retouched flake, flake breaks and retouched flake breaks. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  % of flakes dorsal side is partially covered with cortex. Most of The cortex are limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scar number count the largest proportion.`r flakes_with_4_or_less_scars`% flakes have scar number less than 4. It suggest that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  Among them, % flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%).chart? shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
 
 ```{r corebasics}
+=======
+We found `r n_complete_flakes` complete unretouched flakes. The average maximum length of the flakes is `r flake_length_mean` mm, the average thickness is mm. There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %) and focus.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%).  For most flakes the dorsal side is partially covered with cortex, with  `r flakes_with_20pc_cortex`% of flakes with 20% or less cortical surface on the dorsal face. The average number of dorsal flake scars is `r dorsal_flake_scar_mean`, with a standard deviation of `r dorsal_flake_scar_sd`, and `r flakes_with_4_or_less_scars`% of flakes have less than four scars. The directions of these scars are recorded.  Among them, the scars with the same directions of flake are dominated (%), following with opposite direction(%). We also found a number of centripetal scars (%).  
+
+```{r cores}
+
+# number of platforms on cores
+cores_platform_numbers <- 
+  cores %>% 
+  select(platform) %>% 
+  group_by(platform) %>% 
+  tally() %>% 
+  filter(!is.na(platform)) %>% 
+  mutate(perc = round(n / sum(n) * 100, 1))
+
+single_platform <- cores_platform_numbers$perc[cores_platform_numbers$platform == 1]
+
+
+```
+>>>>>>> fe8e527d60457b313c402c7065ae4f886d8e1fc2
 
 
 ```
 ## Cores
-We found 176 cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
+
+We found `r nrow(cores)` cores in the lithic assemblage. According to the number of platform, there are 3 types of cores: single platform (`r single_platform`%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). The average max dimensions of cores are xx mm.  Most of them are covered with partial cortex(%).  And their location is always on platform (%) and bottom (%). The type of platform is dominated by plain (%) which suggests that most of cores are not prepared and insufficient exploited. This observation also reinforced by the small number of rotation.  
+
+```{r retouch}
+
+
+```
 
 ## Retouched pieces
 
-A total of 1101 retouched pieces were found, accounting for 48.5% of lithic assemblage. The average max dimension is xxx. % retouched pieces are made on flakes (%) and flake breaks (%), others are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Convex edge constitutes the largest proportion of the edge shapes of side scrapers(%). Looking at the location of retouch and the size of the retouched flakes can provide us further insight into retouching behaviours. Most of tools have more than one retouched edges.  We introduced two concepts “Zone Index” and “Geometric Index of Unifacial Reduction(GIUR)” to estimate the invasion and intensity of retouching. From our observation… We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer side of the piece.  
+A total of `r nrow(retouch)` retouched pieces were found, accounting for `r nrow(retouch)/total_number_of_artefacts * 100` % of lithic assemblage. The average max dimension is xxx. % retouched pieces are made on flakes (%) and flake breaks (%), others are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Convex edge constitutes the largest proportion of the edge shapes of side scrapers(%). Looking at the location of retouch and the size of the retouched flakes can provide us further insight into retouching behaviours. Most of tools have more than one retouched edges.  We introduced two concepts “Zone Index” and “Geometric Index of Unifacial Reduction(GIUR)” to estimate the invasion and intensity of retouching. From our observation… We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer side of the piece.  
 
 ### Indices
 
