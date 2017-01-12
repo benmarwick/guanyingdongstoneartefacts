@@ -21,17 +21,8 @@ library(plyr)
 library(dplyr)
 library(knitr)
 library(readxl)
-<<<<<<< HEAD
 library(ggplot2)
 library(tidyr)
-# install.packages("readxl")
-file_name <- "artefacts_original.xls" 
-flakes <- read_excel(file_name, sheet = "flake basics")
-cores <- read_excel(file_name, sheet = "core basics")
-debris <- read_excel(file_name, sheet = "chunk&debris")
-retouch <- read_excel(file_name, sheet = "retouch")
-scar_direction <- read_excel(file_name, sheet = "scar direction ")
-=======
 library(purrr)
 # install.packages("readxl")
 file_name <- "artefacts_new_name.xls" 
@@ -40,7 +31,7 @@ flakes <- quiet_read(file_name, sheet = "flake basics")$result
 cores <- quiet_read(file_name, sheet = "core basics")$result
 debris <- quiet_read(file_name, sheet = "chunk&debris")$result
 retouch <- quiet_read(file_name, sheet = "retouch")$result
->>>>>>> fe8e527d60457b313c402c7065ae4f886d8e1fc2
+
 ```
 
 ```{r eval=TRUE, echo=FALSE}
@@ -262,7 +253,6 @@ quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform
 
 CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "CDG", ]$perc
 
-<<<<<<< HEAD
 is.na(flakes$`scar number`)
 
 !is.na(flakes$`scar number`)
@@ -323,9 +313,7 @@ with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
 
 ```
 
-
-<<<<<<< HEAD
-We found 1292 flake pieces including complete flake(`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is xxx; the average width of platform is xxx.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular.  In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scar number count the largest proportion.`r flakes_with_4_or_less_scars`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Chart? shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
+We found 1292 flake pieces including complete flake (`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is xxx; the average width of platform is xxx.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular.  In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scar number count the largest proportion.`r flakes_with_4_or_less_scars`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Chart? shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
 
 ```{r corebasics}
 
@@ -344,7 +332,6 @@ single_platform <- cores_platform_numbers$perc[cores_platform_numbers$platform =
 
 
 ```
->>>>>>> fe8e527d60457b313c402c7065ae4f886d8e1fc2
 
 
 
