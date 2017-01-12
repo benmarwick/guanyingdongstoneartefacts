@@ -32,6 +32,11 @@ retouch <- read_excel(file_name, sheet = "retouch")
 notch <- read_excel(file_name, sheet = "notches")
 edge_angle <- read_excel(file_name, sheet = "edge angle")
 core_scars <- read_excel(file_name, sheet = "core flake scars")
+
+names(flakes) <- make.names(names(flakes))
+names(cores) <- make.names(names(cores))
+names(debris) <- make.names(names(debris))
+names(retouch) <- make.names(names(retouch))
 ```
 
 ```{r cleanflakedata}
