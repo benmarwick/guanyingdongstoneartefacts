@@ -23,6 +23,11 @@ flakes <- read_excel(file_name, sheet = "flake basics")
 cores <- read_excel(file_name, sheet = "core basics")
 debris <- read_excel(file_name, sheet = "chunk&debris")
 retouch <- read_excel(file_name, sheet = "retouch")
+
+names(flakes) <- make.names(names(flakes))
+names(cores) <- make.names(names(cores))
+names(debris) <- make.names(names(debris))
+names(retouch) <- make.names(names(retouch))
 ```
 
 ```{r}
