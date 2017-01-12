@@ -31,7 +31,7 @@ flakes <- quiet_read(file_name, sheet = "flake basics")$result
 cores <- quiet_read(file_name, sheet = "core basics")$result
 debris <- quiet_read(file_name, sheet = "chunk&debris")$result
 retouch <- quiet_read(file_name, sheet = "retouch")$result
-
+scar_direction <- quiet_read(file_name, sheet = "scar direction ")$result
 ```
 
 ```{r eval=TRUE, echo=FALSE}
@@ -76,7 +76,7 @@ retouch <- rbind(retouch, retouch_duplicated)
 # do the same for the debris...
 
 # are the artefact numbers really unique?
-sum(duplicated(debris$number))
+# sum(duplicated(debris$number))
 
 debris$number <- paste0( "d_", debris$number)
 
@@ -96,7 +96,7 @@ debris <- rbind(debris, debris_duplicated)
 # do the same for the core...
 
 # are the artefact numbers really unique?
-sum(duplicated(cores$number))
+# sum(duplicated(cores$number))
 
 cores$number <- paste0( "c_", cores$number)
 
@@ -107,7 +107,7 @@ cores_duplicated <- cores[ duplicated(cores$number), ]
 cores <- cores[!duplicated(cores$number), ]
 
 # update the artefact ID so it's not duplicate
-cores_duplicated$number <- paste0(cores_duplicated$number, "a")
+# cores_duplicated$number <- paste0(cores_duplicated$number, "a")
 
 # put back into original data 
 cores <- rbind(cores, cores_duplicated)
@@ -219,6 +219,18 @@ n_complete_flakes <- nrow(complete_flakes)
 flake_length_mean <- round(mean(flakes$length, na.rm = TRUE),1) #there are thousands of flakes
 flake_thick_mean <- round(mean(flakes$`Oriented thickness`, na.rm = TRUE),1)
 
+# dorsal flake scars
+# we only want flakes that have 0 or more scars, no NA values
+flake_scar_numbers <- flakes$`scar number`[!is.na(flakes$`scar number`)]
+dorsal_flake_scar_mean <- round(mean(flake_scar_numbers), 2)
+dorsal_flake_scar_sd <- round(sd(flake_scar_numbers), 2)
+# looking at hist(flake_scar_numbers) I see that most flakes have 3 or fewer scars
+# so we can say
+flakes_with_4_or_less_scars <- round(sum(flake_scar_numbers <= 4) / length(flake_scar_numbers) * 100, 1)
+# what about the relationship between number of flake scars and artefact size?
+cor_flake_scars_and_mass <- 
+with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
+
 
 # Flake platforms
 flakes_platforms <- 
@@ -253,10 +265,7 @@ quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform
 
 CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "CDG", ]$perc
 
-is.na(flakes$`scar number`)
-
-!is.na(flakes$`scar number`)
-average_scar_number<-round(mean(flake_scar_numbers, na.rm = FALSE), 2)
+average_scar_number <- round(mean(flake_scar_numbers, na.rm = FALSE), 2)
 
 
 sd_scar_number<-round(sd(flake_scar_numbers, na.rm = FALSE), 2)
@@ -272,15 +281,26 @@ flakes_with_10_or_less_cortex<- sum(flake_cortex_percentage <= 10 )/length(flake
 
 # scar direction
 
-#how many flakes have same scar direction (scar_direction == 1)
+#how many flakes have same scar direction as flaking direction ( == 1)
 
-as.numeric(scar_direction[,2:11])
+library(purrr)
+scar_direction <- as_data_frame(map_if(scar_direction, is.character, as.numeric))
+flakes_same_scar_direction <- 
+scar_direction %>% 
+  filter(`scar1 direction ` == 1 | # if this col == 1 or the next col, or the next 
+         `scar2 direction` == 1 |  # | is the symbol for 'or'
+         `scar3 direction` == 1 |
+         `scar4 direction` == 1 |
+         `scar5 direction` == 1 |
+         `scar6 direction` == 1 |
+         `scar7 direction` == 1 |
+         `scar8 direction` == 1 |
+         `scar9 direction ` == 1 |
+         `scar10 direction` == 1) %>% 
+  nrow()
 
-scar_direction[scar_direction == "?"] = "100"
 
-flakes_same_scar_direction = length(which(apply(scar_direction[, 2:11], 1, function(r) any(r == 1))))
-
-# Thichness for flakes, by platform shape
+# Thickness for flakes, by platform shape
 
 new_flakes <- flakes[flakes$`platform shape` %in% c("CDG", "triangle", "sb", "sx"), ]
 
@@ -295,17 +315,7 @@ ggplot(new_flakes, aes(`Thickness at 25% max dim`, colour = `platform shape`)) +
 flake_cortex_perc <- flakes$`cortex percentage`[!is.na(flakes$`cortex percentage`)]
 flakes_with_20pc_cortex <- round(sum(flake_cortex_perc <= 20) / length(flake_cortex_perc) * 100, 1)
 
-# dorsal flake scars
-# we only want flakes that have 0 or more scars, no NA values
-flake_scar_numbers <- flakes$`scar number`[!is.na(flakes$`scar number`)]
-dorsal_flake_scar_mean <- round(mean(flake_scar_numbers), 2)
-dorsal_flake_scar_sd <- round(sd(flake_scar_numbers), 2)
-# looking at hist(flake_scar_numbers) I see that most flakes have 3 or fewer scars
-# so we can say
-flakes_with_4_or_less_scars <- round(sum(flake_scar_numbers <= 4) / length(flake_scar_numbers) * 100, 1)
-# what about the relationship between number of flake scars and artefact size?
-cor_flake_scars_and_mass <- 
-with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
+
 
 # directions of flake scars
 
@@ -313,7 +323,37 @@ with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
 
 ```
 
-We found 1292 flake pieces including complete flake (`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is xxx; the average width of platform is xxx.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular.  In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scar number count the largest proportion.`r flakes_with_4_or_less_scars`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Chart? shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
+```{r, thicknessplot, fig.cap="Distribution of flake thickness at three points across the flake"}
+
+flakes_L <-  
+  mutate(flakes, L = ifelse(grepl("leva", type), "L", "N"))
+
+
+# explore variation in thickness in these groups
+line_weight <- 1
+library(ggplot2)
+thick_plot <- ggplot(flakes_L) +
+  geom_density(aes(`Thickness at 25% max dim`), 
+               colour = "red", 
+               alpha = 0.3,
+               size = line_weight) +
+  geom_density(aes(`Thickness at 50% max dim`), 
+               colour = "green", 
+               alpha = 0.3,
+               size = line_weight) +
+  geom_density(aes(`Thickness at 75% max dim`), 
+               colour = "blue", 
+               alpha = 0.3, 
+               size = line_weight) +
+  xlab("Thickness (mm)") +
+  theme_minimal() +
+  ggtitle("Distribution of flake thickness")
+
+# draw plot
+thick_plot
+```
+
+We found `r nrow(flakes)` flake pieces including complete flake (`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is xxx; the average width of platform is xxx.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular.  In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scars are the largest proportion.`r round(flakes_with_4_or_less_scars,0)`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Figure \@ref(fig:thicknessplot) shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
 
 ```{r corebasics}
 
