@@ -232,7 +232,7 @@ As chert artefacts are most numerous, we focus our analysis on these pieces. The
 # distributions of length, width, thickness and mass
 library(ggbeeswarm)
 flakes %>% 
-  select(length, `max dimension`, `Oriented width`, mass) %>% 
+  select(length, max.dimension, Oriented.width, mass) %>% 
   gather(variable, value) %>% 
   ggplot(aes(value)) +
   geom_density() +
