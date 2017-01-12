@@ -409,10 +409,13 @@ We found `r nrow(cores)` cores in the lithic assemblage. The average dimension i
 retouch_as_proportion_of_all_artefacts <- round(nrow(retouch) / total_number_of_artefacts * 100, 1)
 
 # compare dimensions of retouch and plain flakes
-flakes %>% 
-  mutate(retouch_complete = ifelse(flakes$type == "ret", "Y", "N")) %>% 
-  group_by(retouch_complete == "Y" ) %>% 
-  summarise_if(is.numeric, mean)
+old_names <- colnames(flakes)
+flakes_clean <- data.frame(flakes[,1:28], check.names = TRUE)
+flakes_clean_summary <- 
+flakes_clean %>% 
+  mutate(retouch_complete = ifelse(flakes_clean$X.type. == "ret", "Y", "N")) %>% 
+  group_by(retouch_complete) %>% 
+  summarise_if(is.numeric, mean, na.rm = TRUE)
            
 #average max dimension of retouched pieces
 retouched_piece <- flakes %>% 
@@ -420,6 +423,63 @@ retouched_piece <- flakes %>%
 
 mean(retouched_piece$`max dimension`, na.rm = TRUE)
 
+
+# edge shape
+retouch$`number of edge`
+number_of_edge_shapes <- 
+map(retouch$`edge shape`, ~unlist(strsplit(., ",|\\."))) %>% 
+  map_int(., length)
+
+edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
+           number_of_edge_shapes)
+
+edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes)
+edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE)
+
+retouch_edge_shapes <- retouch[ edge_checking$diffl, ]
+
+# for all artefacts with 1 retouched edge, what shape is that?
+retouch_edge_shapes_tally <- 
+retouch_edge_shapes %>% 
+  # filter(`number of edge` == 1) %>% 
+  group_by(`edge shape`) %>% 
+  tally() %>% 
+  arrange(desc(n)) 
+
+# join retouch to basic flakes to get retouch flake mass
+flakes_clean_names <- flakes
+names(flakes_clean_names) <- make.names(names(flakes_clean_names))
+retouch_edge_shapes$number_edited <- gsub("f_", "", retouch_edge_shapes$number)
+retouch_edge_shapes_metrics <- 
+  left_join(retouch_edge_shapes, 
+            flakes_clean_names, 
+            by = c("number_edited" = "number"))
+retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
+
+# investigate metrics by edge shape
+retouch_edge_shapes_metrics_by_edge <- 
+retouch_edge_shapes_metrics %>% 
+  group_by(edge.shape) %>%
+  mutate(count = n()) %>% # how many in each group?
+  summarise_if(is.numeric, mean, na.rm = TRUE) %>% 
+  arrange(desc(count))  # arrange from biggest group to smallest
+
+# just look at the first five rows, and basic metrics
+basic_metrics <- c("length" , "max.dimension" , "Oriented.width" ,   "Width.at.25..max.dim" , "Width.at.50..max.dim" ,   "Width.at.75..max.dim" , "Oriented.thickness" ,   "Thickness.at.25..max.dim" ,   "Thickness.at.50..max.dim" ,   "Thickness.at.75..max.dim" , "mass" ,   "platform.width" , "platform.thickness" ,   "scar.number" , "cortex.percentage")
+
+retouch_edge_shapes_metrics_by_edge[1:5, ]  %>% 
+  select(one_of(c("edge.shape", basic_metrics)))
+
+# Plot these
+library(tidyr)
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  gather_(edge.shape, .dots = list(basic_metrics))
+  ggplot(aes(edge.shape))
+
+
+
+  
 
 
 
