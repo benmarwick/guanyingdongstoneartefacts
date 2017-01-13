@@ -9,12 +9,7 @@ my_MRAN <- paste0("https://mran.revolutionanalytics.com/snapshot/",
 # force repos to MRAN
 options(repos = c(CRAN = my_MRAN))
 
-
-
+rm(my_date, my_MRAN)
 
 #### -- End set repos to MRAN -- ####
-#### -- Packrat Autoloader (version 0.4.8-1) -- ####
-source("packrat/init.R")
-#### -- End Packrat Autoloader -- ####
 
-packrat::set_opts(local.repos = my_MRAN)
