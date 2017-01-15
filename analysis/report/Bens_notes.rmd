@@ -269,20 +269,7 @@ retouch_zones <-
             s7_t_T_mean = mean(s7_t_T, na.rm = TRUE),
             s8_t_T_mean = mean(s8_t_T, na.rm = TRUE))
 
-pol <- data.frame(
-x = c(1,2,2,3,4,4),
-y = c(1,1,2,2,2,3),
-g = c("a","a","a","b","b","b")
-)
-library(ggplot2)
-ggplot(pol,
-       aes(x,y,
-           group = g))  +
-  geom_polygon()
 
-         
-        
-         
 ggplot(retouch, aes(GIUR)) +
   geom_density() 
 
@@ -309,6 +296,104 @@ ggplot(aes(y = GIUR_mean,
                        GIUR_mean))) +
   geom_bar(stat = "identity")  +
    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+5/
+
+
+outline <- 
+data.frame(
+x = c(-1.8,  0,   1.8,   2,        1.75,  1.5,  1.25,      0,   -1.25,     -1.5, -1.75,   -2),
+y = c( 5,    5,   5,     (5/4)*3,  2,     1,    0.25,      0,    0.25,      1,    2,      (5/4)*3),
+g = rep("a", 12)
+)
+
+mirror <- function(poly){
+    m <- poly
+    m$x <- -m$x
+    m
+}
+
+zone_one <- 
+data.frame(
+x = c(-1.8,  0,   0,         -2),
+y = c( 5,    5,   (5/4)*3,   (5/4)*3),
+g = rep("a", 4)
+)
+
+zone_eight <- mirror(zone_one)
+
+zone_two <- 
+data.frame(
+x = c(  0,       0,        -2,        -1.81),
+y = c( (5/4)*2, (5/4)*3,   (5/4)*3,   (5/4)*2),
+g = rep("a", 4)
+)
+
+zone_seven <- mirror(zone_two)
+
+zone_three <- 
+data.frame(
+x = c(  0,       0,         -1.81,    -1.5       ),
+y = c( (5/4)*1, (5/4)*2,   (5/4)*2,   (5/4)*1),
+g = rep("a", 4)
+)
+
+zone_six <- mirror(zone_three)
+
+zone_four <- 
+data.frame(
+x = c(  0,       0,         -1.5,    -1.1       ),
+y = c(  0,       (5/4)*1,   (5/4)*1,   0),
+g = rep("a", 4)
+)
+
+zone_five <- mirror(zone_four)
+
+
+
+library(ggplot2)
+ggplot()  +
+  geom_polygon(data = zone_one,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_eight,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_two,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_seven,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_three,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_six,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_four,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  geom_polygon(data = zone_five,
+        aes(x,y,
+        group = g),
+        colour = "black", 
+        fill=NA) +
+  coord_equal() +
+  theme_minimal()
 
 
 ```
@@ -481,3 +566,69 @@ plain_flakes %>%
 # look at CV of metric variables by size groups
 
 ```
+
+Setting up:
+
+```{r eval = FALSE}
+
+## -----------------------------------------------------------------------
+# try checkpoint
+
+# start with this to set a date for the packages that we use
+# from the project root directory
+checkpoint::checkpoint("2016-11-30", use.knitr = TRUE, 
+                       checkpointLocation = getwd())
+# then, so checkpoint can see inside the Rmd...
+install.packages("knitr")
+# then again, and it will get from MRAN all the pkgs mentioned in the Rmd 
+checkpoint::checkpoint("2016-11-30", use.knitr = TRUE)
+
+# make .Rprofile file with this in it:
+#### -- checkpoint Autoloader  -- ####
+
+ # set date
+ my_date <- "2016-11-30"
+
+ # force repos to MRAN
+ options(repos = c(CRAN = paste0("https://mran.revolutionanalytics.com/snapshot/",
+                                 my_date)))
+ 
+ # knitr bug, check if knitr is installed, if not, then install
+ require("knitr")
+ 
+ # run checkpoint
+ checkpoint::checkpoint(my_date, 
+                        use.knitr = TRUE, 
+                        checkpointLocation = getwd())
+
+#### -- End checkpoint Autoloader -- ####
+
+# add this to .gitignore so we don't track all the check point pkgs
+.checkpoint/*
+
+# checking...
+# Check that CRAN mirror is set to MRAN snapshot:n
+getOption("repos") # yes
+# Check that library path is set to ~/.checkpoint:
+normalizePath(.libPaths(), winslash = "/") # yes, ok
+
+# travis.yml just runs docker
+# dockerfile has MRAN with date hard-coded. 
+# This is no good because checkpoint cannot access the Rmd files
+
+## ---------------------------------------------------------------------------
+
+# try packrat
+
+# So back to packrat, keeping MRAN and date in .Rprofile
+
+# install packrat
+packrat::init()
+
+# then install the necessary pkgs... then
+packrat::snapshot()
+
+
+```
+
+
