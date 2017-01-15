@@ -453,17 +453,19 @@ complete_flakes_retouch %>%
            
 # edge shape, check to see that number of edge shapes matches 
 # count of edge shapes
-number_of_edge_shapes <- 
+retouch$`edge shape` <- gsub(" ", "", retouch$`edge shape`) # 1101
+number_of_edge_shapes <- # 1101 items
 map(retouch$`edge shape`, ~unlist(strsplit(., ",|\\."))) %>% 
   map_int(., length)
 
 edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
-           number_of_edge_shapes)
+           number_of_edge_shapes) # 1101 rows
 
-edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes)
-edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE)
+edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes) # 1101
+edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE) # 1101
 
-retouch_edge_shapes <- retouch[ edge_checking$diffl, ]
+# only get the retouched artefacts where the count of edges matches the number of edge types
+retouch_edge_shapes <- retouch[ edge_checking$diffl, ] # 783 rows
 
 # for all artefacts with 1 retouched edge, what shape is that?
 retouch_edge_shapes_tally <- 
@@ -472,6 +474,8 @@ retouch_edge_shapes %>%
   group_by(`edge shape`) %>% 
   tally() %>% 
   arrange(desc(n)) 
+
+sum(retouch_edge_shapes_tally$n)
 
 # join retouch to basic flakes to get retouch flake mass
 flakes_clean_names <- flakes
@@ -493,7 +497,6 @@ retouch_edge_shapes_metrics %>%
 
 # just look at the first five rows, and basic metrics
 
-
 retouch_edge_shapes_basic_metrics_by_edge <- 
 retouch_edge_shapes_metrics_by_edge[1:5, ]  %>% 
   select(one_of(c("edge.shape", basic_metrics)))
@@ -509,6 +512,8 @@ retouch_edge_shapes_metrics %>%
              value)) +
     geom_boxplot() +
   facet_wrap( ~ variable, scales = "free_y")
+
+
 # seems that it's not highly patterned, but maybe mass is worth a closer look
 plot_retouch_edge_type_mass <- 
 retouch_edge_shapes_metrics %>% 
@@ -520,6 +525,36 @@ retouch_edge_shapes_metrics %>%
     geom_boxplot()  +
   scale_y_log10()
 # not a lot of difference 
+
+# ANOVA to test for statistical difference
+anova_on_edge_shape_and_metrics <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", basic_metrics))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  nest(-variable) %>% 
+  mutate(anova = map(data, ~aov(value ~ edge.shape, data = .)))
+
+# extract p-values and find the variable with significant different
+anova_on_edge_shape_and_metrics_pvalues <- 
+anova_on_edge_shape_and_metrics %>%
+  mutate(model = map(anova, ~tidy(.x, data = .))) %>% 
+  unnest(model) %>% 
+  filter(term != "Residuals") %>% 
+  filter( p.value <= 0.05)
+
+xxx <- 
+anova_on_edge_shape_and_metrics %>% 
+  filter(variable %in% anova_on_edge_shape_and_metrics_pvalues$variable) %>% 
+  mutate(tukeyhsd = map(anova, 
+                        ~tidy(TukeyHSD(.x, 
+                                       data = ., 
+                                       ordered = TRUE)))) %>% 
+  unnest(tukeyhsd)  %>% 
+  filter(adj.p.value <= 0.05)
+  
+  
+  
 
 
 
