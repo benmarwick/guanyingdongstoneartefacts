@@ -543,7 +543,7 @@ anova_on_edge_shape_and_metrics %>%
   filter(term != "Residuals") %>% 
   filter( p.value <= 0.05)
 
-xxx <- 
+anova_on_edge_shape_and_metrics_tukeyhsd <- 
 anova_on_edge_shape_and_metrics %>% 
   filter(variable %in% anova_on_edge_shape_and_metrics_pvalues$variable) %>% 
   mutate(tukeyhsd = map(anova, 
@@ -552,14 +552,35 @@ anova_on_edge_shape_and_metrics %>%
                                        ordered = TRUE)))) %>% 
   unnest(tukeyhsd)  %>% 
   filter(adj.p.value <= 0.05)
-  
-  
-  
+```
 
 
+```{r retouch_index_giur}
+
+retouch_giur_per_section <- 
+retouch %>% 
+  select(grep("^number$|_t|_T", names(retouch))) %>% 
+  gather(variable, value, -number) %>% 
+  separate(variable, c("section", "tee"), sep = 10) %>% 
+  spread(tee, value) %>% 
+  mutate(t_T = t / T)  %>% 
+  filter(t_T <= 1)
+
+retouch_giur_per_artefact <- 
+retouch_giur_per_section %>% 
+  group_by(number) %>% 
+  summarise(mean_giur = mean(t_T, na.rm = TRUE))
+
+mean(retouch_giur_per_artefact$mean_giur)
+
+# what percentage of retouched pieces have a GIUR greater than N
+N <-  0.5
+mean(retouch_giur_per_artefact$mean_giur > N) 
 
 
 ```
+
+
 
 ## Retouched pieces
 
