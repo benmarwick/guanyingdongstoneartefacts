@@ -575,7 +575,8 @@ mean(retouch_giur_per_artefact$mean_giur)
 
 # what percentage of retouched pieces have a GIUR greater than N
 N <-  0.5
-mean(retouch_giur_per_artefact$mean_giur > N) 
+percentage_with_giur_greater_than_N <-
+  round(mean(retouch_giur_per_artefact$mean_giur > N)  * 100, 0)
 
 
 ```
