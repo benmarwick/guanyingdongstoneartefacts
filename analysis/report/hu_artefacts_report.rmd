@@ -411,9 +411,20 @@ retouch_as_proportion_of_all_artefacts <- round(nrow(retouch) / total_number_of_
 # compare mean dimensions of retouch and plain flakes
 old_names <- colnames(flakes)
 flakes_clean <- data.frame(flakes[,1:28], check.names = TRUE)
+
+flakes_clean <- 
+  flakes_clean %>% 
+   mutate(retouch_complete = 
+            ifelse(grepl("^ret$|^ret $|^retblank$|ret bnk",
+                         type), 
+                   "complete_retouch", 
+            ifelse(type  == "flk", 
+            "complete_flake", 
+            "NA")))
+  
+# compute the means of the numeric variables for retouch/non-retouch
 flakes_clean_summary <- 
 flakes_clean %>% 
-  mutate(retouch_complete = ifelse(flakes_clean$type == "ret", "Y", "N")) %>% 
   group_by(retouch_complete) %>% 
   summarise_if(is.numeric, mean, na.rm = TRUE)
 
@@ -422,8 +433,6 @@ basic_metrics <- c("length" , "max.dimension" , "Oriented.width" ,   "Width.at.2
 # look at basic metrics for complete flakes and complete retouched pieces
 complete_flakes_retouch <- 
 flakes_clean %>% 
-  mutate(retouch_complete = ifelse(flakes_clean$type == "ret", "complete_retouch",       
-                              ifelse(flakes_clean$type  == "flk", "complete_flake", "NA"))) %>%
   select(one_of(c("retouch_complete", basic_metrics))) %>% 
   gather(variable, value, -retouch_complete) %>% 
   filter(retouch_complete != "NA") 
@@ -434,7 +443,7 @@ ggplot(complete_flakes_retouch,
        aes(retouch_complete,
              value)) +
     geom_boxplot()  +
-    scale_y_log10() +
+    #scale_y_log10() +
   facet_wrap( ~ variable, scales = "free_y")
 
 # stat test on basic metric variables for retouch vs non-retouch flakes. Show variables with significant difference
@@ -557,6 +566,8 @@ anova_on_edge_shape_and_metrics %>%
 
 ```{r retouch_index_giur}
 
+# looking at the GIUR data...
+
 retouch_giur_per_section <- 
 retouch %>% 
   select(grep("^number$|_t|_T", names(retouch))) %>% 
@@ -578,13 +589,43 @@ N <-  0.5
 percentage_with_giur_greater_than_N <-
   round(mean(retouch_giur_per_artefact$mean_giur > N)  * 100, 0)
 
-# join metrics variables with GIUR data
-retouch_giur_per_artefact_with_metrics <-
-  left_join(retouch_giur_per_artefact,
-            flakes_clean_names,
-            by = "number")
-# the average max dimension of retouched piece 
-average_max_dimension_of_retouch <- round(mean(retouch_giur_per_artefact_with_metrics$max.dimension, na.rm = TRUE),2)
+# Investigate GIUR with other metric variables
+
+# join metric variables with GIUR data
+retouch_giur_metrics <- 
+  left_join(retouch_giur_per_artefact, 
+            flakes_clean_names, 
+            by =  "number")
+
+# visualise correlation of giur with metrics
+library(GGally)
+retouch_giur_metrics %>% 
+  select(-number, -type, -type2) %>% 
+  select_if(is.numeric) %>% 
+  ggpairs()
+
+# do correlation test
+cor.test_safe <- safely(cor.test)
+retouch_giur_metrics %>% 
+  select(-number, -type, -type2, -site) %>% 
+  select_if(is.numeric) %>% 
+  gather(variable, value, -mean_giur) %>% 
+  nest(-variable) %>% 
+  mutate(cor_test = map(data, ~cor.test_safe(.x$mean_giur, 
+                                             .x$value, 
+                                             na.action = na.omit))) %>% 
+  mutate(cor_test_tidy = map(cor_test, 
+                             ~tidy(.x$result, 
+                                   data = .))) %>% 
+  unnest(cor_test_tidy)
+  
+
+# visualise correlation of giur with non-metrics
+library(GGally)
+retouch_giur_metrics %>% 
+  select(-number, -type, -type2) %>% 
+  select(which(!map_lgl(., is.numeric))) %>% 
+  ggpairs()
 
 
 ```
@@ -593,7 +634,10 @@ average_max_dimension_of_retouch <- round(mean(retouch_giur_per_artefact_with_me
 
 ## Retouched pieces
 
-A total of `r row(retouch)` retouched pieces were found in the assemblage, accounting for `r retouch_as_proportion_of_all_artefacts`% of lithic assemblage. The average max dimension is `r average_max_dimension_of_retouch`mm. Compared with unretouched flakes, Retouched pieces are generally larger according to the fact that retouched pieces are greater on length, max dimension, width and thickness, Especially for entire thickness values. This indicats that after flake production, the knappers prefer to choose bigger flakes or flake fragments to retouch, especially, longer and thicker ones. In terms of raw materials, retouched flakes made of chert are the smallest. Limestone is slightly larger than chert(Fig?).  % retouched pieces are made on flakes (%) and flake breaks (%), a small number of them are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Over % retouched pieces have more than 1 edge. The edge shapes of 1858 retouched edges were recorded from retouched pieces. The edge shapes include convex, concave, straight, denticulate, end, notch, borer. Among them, straight edge constitutes the largest proportion of the retouched edge (n=575 %) followed by convex(n=395) and concave(n=248)(significance of straight edge).We calculated the edge angle by measuring the width at the 3 mm depth of the edge. The average angle of each edge is?. Notably, there is amount of the edge angles are extreme steep which is not common in other site. This feature can be explained in two ways: 1) the lack of good quality raw materials leaded tool makers to elongate the lives of tools as long as possible, therefore, the edges had been retouched multiple times  after using; 2) they intended to produce the steep edge in order to apply to a special tusk.  Fig? and Fig? show the edge number distribution and edge shapes of each piece. The result shows that the majority of tools are not only retouched one edge, instead, they retouched several edges on one single piece. It also suggest the high efficient of exploit. Most of the layers of retouch is 1(n=760) and 2 (n=322).  Looking at the location of retouch and the size of the retouched flakes can provide us further insight into retouching behaviours. Most of tools have more than one retouched edges.  We introduced two concepts “Zone Index” and “Geometric Index of Unifacial Reduction(GIUR)” to estimate the invasion and intensity of retouching. In this assemblage, if a flake is retouched, the retouch tends to be extensive. This is suggested by the GIUR values. We found that `r percentage_with_giur_greater_than_N`% of retouched artefacts have a GIUR greater than `r N`. However, there is no obvious correlations between GIUR values and other variables such like length, width and thickness.  From our observation… We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer geometric side of the piece.  Except retouching with hard hammer percussing, pressing is also likely utilized demonstrated by flat and enlonged retouching scars. One remarkable feature of the retouching is demonstrated by a strong moustrian style with regular and continues retouching scars producing even edges on a large number of tools.
+
+A total of `r row(retouch)` retouched pieces were found in the assemblage, accounting for `r retouch_as_proportion_of_all_artefacts`% of lithic assemblage. The average max dimension is `r average_max_dimension_of_retouch`mm. Compared with unretouched flakes, Retouched pieces are generally larger according to the fact that retouched pieces are greater on length, max dimension, width and thickness, Especially for entire thickness values. This indicats that after flake production, the knappers prefer to choose bigger flakes or flake fragments to retouch, especially, longer and thicker ones. In terms of raw materials, retouched flakes made of chert are the smallest. Limestone is slightly larger than chert(Fig?).  % retouched pieces are made on flakes (%) and flake breaks (%), a small number of them are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Over % retouched pieces have more than 1 edge. The edge shapes of 1858 retouched edges were recorded from retouched pieces. The edge shapes include convex, concave, straight, denticulate, end, notch, borer. Among them, straight edge constitutes the largest proportion of the retouched edge (n=575 %) followed by convex(n=395) and concave(n=248)(significance of straight edge).We calculated the edge angle by measuring the width at the 3 mm depth of the edge. The average angle of each edge is?. Notably, there is amount of the edge angles are extreme steep which is not common in other site. This feature can be explained in two ways: 1) the lack of good quality raw materials leaded tool makers to elongate the lives of tools as long as possible, therefore, the edges had been retouched multiple times  after using; 2) they intended to produce the steep edge in order to apply to a special tusk.  Fig? and Fig? show the edge number distribution and edge shapes of each piece. The result shows that the majority of tools are not only retouched one edge, instead, they retouched several edges on one single piece. It also suggest the high efficient of exploit. Most of the layers of retouch is 1(n=760) and 2 (n=322).  Looking at the location of retouch and the size of the retouched flakes can provide us further insight into retouching behaviours. Most of tools have more than one retouched edges.
+
+We introduced two concepts “Zone Index” and “Geometric Index of Unifacial Reduction(GIUR)” to estimate the invasion and intensity of retouching. In this assemblage, if a flake is retouched, the retouch tends to be extensive. This is suggested by the GIUR values. We found that `r percentage_with_giur_greater_than_N`% of retouched artefacts have a GIUR greater than `r N`. However, there is no obvious correlations between GIUR values and other variables such like length, width and thickness.  From our observation… We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer geometric side of the piece.  Except retouching with hard hammer percussing, pressing is also likely utilized demonstrated by flat and enlonged retouching scars. One remarkable feature of the retouching is demonstrated by a strong moustrian style with regular and continues retouching scars producing even edges on a large number of tools.
 
 
 
