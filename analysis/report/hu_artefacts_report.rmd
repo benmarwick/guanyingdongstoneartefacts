@@ -601,8 +601,24 @@ retouch_giur_metrics <-
 library(GGally)
 retouch_giur_metrics %>% 
   select(-number, -type, -type2) %>% 
-  select(which(map_lgl(., is.numeric))) %>% 
+  select_if(is.numeric) %>% 
   ggpairs()
+
+# do correlation test
+cor.test_safe <- safely(cor.test)
+retouch_giur_metrics %>% 
+  select(-number, -type, -type2, -site) %>% 
+  select_if(is.numeric) %>% 
+  gather(variable, value, -mean_giur) %>% 
+  nest(-variable) %>% 
+  mutate(cor_test = map(data, ~cor.test_safe(.x$mean_giur, 
+                                             .x$value, 
+                                             na.action = na.omit))) %>% 
+  mutate(cor_test_tidy = map(cor_test, 
+                             ~tidy(.x$result, 
+                                   data = .))) %>% 
+  unnest(cor_test_tidy)
+  
 
 # visualise correlation of giur with non-metrics
 library(GGally)
