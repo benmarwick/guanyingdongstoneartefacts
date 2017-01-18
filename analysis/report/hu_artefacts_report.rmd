@@ -32,6 +32,7 @@ cores <- quiet_read(file_name, sheet = "core basics")$result
 debris <- quiet_read(file_name, sheet = "chunk&debris")$result
 retouch <- quiet_read(file_name, sheet = "retouch")$result
 scar_direction <- quiet_read(file_name, sheet = "scar direction ")$result
+edge_angle <- quiet_read(file_name, sheet = "edge angle")$result
 ```
 
 ```{r eval=TRUE, echo=FALSE}
@@ -52,6 +53,28 @@ flakes_duplicated$number <- paste0(flakes_duplicated$number, "a")
 
 # put back into original data 
 flakes <- rbind(flakes, flakes_duplicated)
+
+flakes$initiation <- ifelse(flakes$initiation %in% c("hert", "h"), "hertzian",
+                            ifelse(flakes$initiation == "bend", "bending",
+                                   ifelse(flakes$initiation %in% c("wedging", "wed"), "wedge",
+                                          ifelse(flakes$initiation %in% c("miss", "mis"),
+                                                 "missing", flakes$initiation))))
+
+
+flakes$platform <- ifelse(flakes$platform == "plane", "plain",
+                          ifelse(flakes$platform %in% c("miss", "mis", "42.000000", "0.000000", "overh"), "missing",
+                                 ifelse(flakes$platform == "facted", "faceted",flakes$platform)))
+
+flakes$termination <- ifelse(flakes$termination == "f", "feather",
+                             ifelse(flakes$termination == "br", "break",
+                                    ifelse(flakes$termination %in% c("brpt", "brput"), "abrupt",
+                                           ifelse(flakes$termination == "plung", "plunge",
+                                                  ifelse(flakes$termination == "st", "step",
+                                                         ifelse(flakes$termination %in% c("m", "miss", "na", "over"), "missing",flakes$termination))))))
+
+
+flakes$`Width at 25% max dim` <- ifelse(flakes$`Width at 25% max dim` == 332.7, 33.2,
+                                        ifelse(flakes$`Width at 25% max dim` == 668, 66.8,flakes$`Width at 25% max dim`))
 
 # do the same for the retouch...
 
@@ -736,6 +759,77 @@ retouch_giur_metrics %>%
   ggpairs()
 ```
 
+```{r retouch_ii}
+
+retouch_ii_per_section <- 
+retouch %>% 
+  select(grep("^number$|_II", names(retouch))) %>% 
+  gather(variable, value, -number) %>% 
+  mutate(value = as.numeric(ifelse(is.na(value), 0, value)))
+ 
+
+retouch_ii_per_artefact <- 
+retouch_ii_per_section %>% 
+  group_by(number) %>% 
+  summarise(mean_ii = mean(value, na.rm = TRUE))
+
+mean(retouch_ii_per_artefact$mean_ii)
+
+# what percentage of retouched pieces have a II less than N
+N <-  0.2
+percentage_with_ii_greater_than_N <-
+  round(mean(retouch_ii_per_artefact$mean_ii < N)  * 100, 0)
+
+# histogram
+ hist(retouch_ii_per_artefact$mean_ii)
+
+# Investigate II with other metric variables
+
+# join metric variables with ii data
+retouch_ii_metrics <- 
+  left_join(retouch_ii_per_artefact, 
+            flakes_clean_names, 
+            by =  "number")
+
+# visualise correlation of giur with metrics
+library(GGally)
+plot_retouch_ii_metrics <- 
+retouch_ii_metrics %>% 
+  select(-number, -type, -type2) %>% 
+  select_if(is.numeric) %>% 
+  ggpairs()
+
+# do correlation test
+cor.test_safe <- safely(cor.test)
+retouch_ii_metrics_cor_test <- 
+retouch_ii_metrics %>% 
+  select(-number, -type, -type2, -site) %>% 
+  select_if(is.numeric) %>% 
+  gather(variable, value, -mean_ii) %>% 
+  nest(-variable) %>% 
+  mutate(cor_test = map(data, ~cor.test_safe(.x$mean_ii, 
+                                             .x$value, 
+                                             na.action = na.omit))) %>% 
+  mutate(cor_test_tidy = map(cor_test, 
+                             ~tidy(.x$result, 
+                                   data = .))) %>% 
+  unnest(cor_test_tidy)
+  
+
+# visualise correlation of giur with non-metrics
+non_metrics <- names(retouch_ii_metrics)[!map_lgl(retouch_ii_metrics, is.numeric)]
+
+library(GGally)
+retouch_ii_metrics_nonmetrics_plot <- 
+retouch_ii_metrics %>% 
+  select(c(mean_ii, 
+           one_of(non_metrics))) %>% 
+  select(-number, -type, -type2, -layer, -comment) %>% 
+  ggpairs()
+
+# Consider II for each zone compare the frequency of 1s vs 0.5s for the II
+```
+
 
 ```{r retouch_type2}
 
@@ -806,6 +900,126 @@ retouch_giur_metrics %>%
   
 
 ```
+
+```{r retouch_curvature}
+retouch_raw_material_metrics <-
+retouch_raw_material_metrics %>% 
+  mutate(curvature = log(`retouch_depth (for curvature)`/ `retouch_diameter (for curvature)`))
+
+# what percentage of retouched pieces have a curvature less than N
+N <-  0.3
+percentage_with_curv_greater_than_N <-
+  round(mean(retouch_raw_material_metrics$curvature < N, na.rm = TRUE)  * 100, 0)
+
+# histogram
+ hist(retouch_raw_material_metrics$curvature)
+ 
+
+# Investigate curvature with other metric variables
+# join metric variables with curvature data
+retouch_curvature_per_artefact <- 
+   retouch_raw_material_metrics %>% 
+   select(number, curvature)
+
+retouch_curvature_metrics <- 
+  left_join(retouch_curvature_per_artefact, 
+            flakes_clean_names, 
+            by =  "number") %>% 
+  left_join(retouch_giur_metrics) %>% 
+  left_join(retouch_ii_metrics) 
+
+# visualise correlation of curvature with metrics
+library(GGally)
+plot_retouch_curvature_metrics <- 
+retouch_curvature_metrics %>% 
+  select(-number, -type, -type2) %>% 
+  select_if(is.numeric) %>% 
+  ggpairs()
+
+# do correlation test
+cor.test_safe <- safely(cor.test)
+retouch_curvature_metrics_cor_test <- 
+retouch_curvature_metrics %>% 
+  select(-number, -type, -type2, -site) %>% 
+  select_if(is.numeric) %>% 
+  gather(variable, value, -curvature) %>% 
+  nest(-variable) %>% 
+  mutate(cor_test = map(data, ~cor.test_safe(.x$curvature, 
+                                             .x$value, 
+                                             na.action = na.omit))) %>% 
+  mutate(cor_test_tidy = map(cor_test, 
+                             ~tidy(.x$result, 
+                                   data = .))) %>% 
+  unnest(cor_test_tidy) %>% 
+  arrange(p.value)
+  
+
+# visualise correlation of curvature with non-metrics
+non_metrics <- names(retouch_curvature_metrics)[!map_lgl(retouch_curvature_metrics, is.numeric)]
+
+library(GGally)
+retouch_curvature_metrics_nonmetrics_plot <- 
+retouch_curvature_metrics %>% 
+  select(c(curvature, 
+           one_of(non_metrics))) %>% 
+  select(-number, -type, -type2, -layer, -comment) %>% 
+  ggpairs()
+
+```
+
+```{r retouch_edge_angle}
+# Do levallois pieces have higher angles?
+edge_angle <- 
+edge_angle %>% 
+  gather(variable, value, -number) %>% 
+  mutate(value = 2 * ( atan(0.5 * (value/3) ) ) / (pi/180))
+
+edge_angle_metrics <- 
+edge_angle %>% 
+  mutate(number = paste0("f_", number)) %>% 
+  left_join(retouch_curvature_metrics)
+
+library(ggforce)
+edge_angle_metrics_lev <- 
+edge_angle_metrics %>% 
+  filter(type %in% c("leva", "leva ","leva flake ", "ret")) 
+
+
+  ggplot(edge_angle_metrics_lev,
+       aes(type,
+           value)) +
+  geom_boxplot() +
+  geom_sina()
+  
+# ANOVA to test for statistical difference
+anova_on_edge_angle_metrics_lev <- 
+edge_angle_metrics_lev %>% 
+  select(value, type) %>% 
+  aov(value ~ type, data = .)
+
+# extract p-values and find the variable with significant different
+anova_on_type2_and_metrics_pvalues <- 
+anova_on_type2_and_metrics %>%
+  mutate(model = map(anova, ~tidy(.x, data = .))) %>% 
+  unnest(model) %>% 
+  filter(term != "Residuals") %>% 
+  filter( p.value <= 0.05)
+
+anova_on_typ2_and_metrics_tukeyhsd <- 
+anova_on_type2_and_metrics %>% 
+  filter(variable %in% anova_on_type2_and_metrics_pvalues$variable) %>% 
+  mutate(tukeyhsd = map(anova, 
+                        ~tidy(TukeyHSD(.x, 
+                                       data = ., 
+                                       ordered = TRUE)))) %>% 
+  unnest(tukeyhsd)  %>% 
+  filter(adj.p.value <= 0.05)  
+
+
+
+# do they have less variability?
+```
+
 
 ## Retouched pieces
 
