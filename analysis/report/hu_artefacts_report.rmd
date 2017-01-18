@@ -421,6 +421,11 @@ flakes_clean <-
             ifelse(type  == "flk", 
             "complete_flake", 
             "NA")))
+
+# join retouch to basic flakes to get retouch flake mass
+flakes_clean_names <- flakes
+names(flakes_clean_names) <- make.names(names(flakes_clean_names))
+
   
 # compute the means of the numeric variables for retouch/non-retouch
 flakes_clean_summary <- 
@@ -501,7 +506,7 @@ ggplot(retouch_raw_material_metrics_long,
                scales = "free_y")
 
 
-
+retouch_raw_material_metrics_long %>% 
   nest(-variable) %>% 
   mutate(t_test = map(data, ~t.test(value ~  material, 
                                     data = .,
@@ -547,7 +552,6 @@ retouch_blank_type_tally %>%
 
 
 ```{r retouch_edge_shape}
-           
 # edge shape, check to see that number of edge shapes matches 
 # count of edge shapes
 retouch$`edge shape` <- gsub(" ", "", retouch$`edge shape`) # 1101
@@ -561,8 +565,18 @@ edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
 edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes) # 1101
 edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE) # 1101
 
+
 # only get the retouched artefacts where the count of edges matches the number of edge types
 retouch_edge_shapes <- retouch[ edge_checking$diffl, ] # 783 rows
+
+# retouch_edge_shapes$number <- gsub("f_", "", retouch_edge_shapes$number)
+retouch_edge_shapes_metrics <- 
+  left_join(retouch_edge_shapes, 
+            flakes_clean_names, 
+            by =  "number")
+retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
+           
+
 
 # for all artefacts with 1 retouched edge, what shape is that?
 retouch_edge_shapes_tally <- 
@@ -574,15 +588,7 @@ retouch_edge_shapes %>%
 
 sum(retouch_edge_shapes_tally$n)
 
-# join retouch to basic flakes to get retouch flake mass
-flakes_clean_names <- flakes
-names(flakes_clean_names) <- make.names(names(flakes_clean_names))
-# retouch_edge_shapes$number <- gsub("f_", "", retouch_edge_shapes$number)
-retouch_edge_shapes_metrics <- 
-  left_join(retouch_edge_shapes, 
-            flakes_clean_names, 
-            by =  "number")
-retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
+
 
 # investigate metrics by edge shape
 retouch_edge_shapes_metrics_by_edge <- 
@@ -672,6 +678,14 @@ retouch_giur_per_section %>%
 
 mean(retouch_giur_per_artefact$mean_giur)
 
+# join metrics variables with GIUR data
+retouch_giur_per_artefact_with_metrics <-
+  left_join(retouch_giur_per_artefact,
+            flakes_clean_names,
+            by = "number")
+# the average max dimension of retouched piece 
+average_max_dimension_of_retouch <- round(mean(retouch_giur_per_artefact_with_metrics$max.dimension, na.rm = TRUE),2)
+
 # what percentage of retouched pieces have a GIUR greater than N
 N <-  0.5
 percentage_with_giur_greater_than_N <-
@@ -722,13 +736,6 @@ retouch_giur_metrics %>%
   ggpairs()
 ```
 
-# join metrics variables with GIUR data
-retouch_giur_per_artefact_with_metrics <-
-  left_join(retouch_giur_per_artefact,
-            flakes_clean_names,
-            by = "number")
-# the average max dimension of retouched piece 
-average_max_dimension_of_retouch <- round(mean(retouch_giur_per_artefact_with_metrics$max.dimension, na.rm = TRUE),2)
 
 ```{r retouch_type2}
 
@@ -788,14 +795,14 @@ anova_on_type2_and_metrics %>%
   filter(adj.p.value <= 0.05)
 
 # giur by type2
-library(ggforce)
+#library(ggforce)
 retouch_giur_metrics %>% 
   filter(type2 %in% c("scp", "dent", "notch", "borer,scp")) %>% 
   select(type2, mean_giur) %>% 
   ggplot(aes(type2,
              mean_giur)) +
-  geom_boxplot() + 
-  geom_sina(alpha = 0.4)
+  geom_boxplot() #+ 
+  #geom_sina(alpha = 0.4)
   
 
 ```
