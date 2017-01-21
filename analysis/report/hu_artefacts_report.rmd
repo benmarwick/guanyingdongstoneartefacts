@@ -242,6 +242,7 @@ limestone_ret<- flakes %>%
   nrow()
 
 ```
+
 Previous research reported that the stone artefacts are preliminarily made of siliceous limestone, In my observation,the majority of siliceous limestone is classified as chert, therefore, the assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) followed by limestone (`r raw_material_tbl$Proportion[3]`%) and  basalt, sandstone and quartz  were only occasionally used and constitute % and % of the assemblage respectively. Although the chert selected varies slightly from color to texture, sub-classification is not conducted due to the consistence of their physical properties which are homogeneous without fracture, joint and constant hardness. Table? Shows the different types of stone artefact that chert and limestone were employed.  `r percentage_of_chert_tools` % chert flakes were retouched into stone tools indicating a high efficient exploit of this raw material, although it can be easily obtained nearby. In terms of retouched pieces, `r chert_ret` of them are made of chert, `r limestone_ret` of them are made from limestone. It is obvious that  hominins  intended to selected chert as optimal raw material to manufacture  stone tools. 
 
 
@@ -295,12 +296,13 @@ facet_plat_perc <- flakes_platforms[flakes_platforms$platform == "facet", ]$perc
 
 flakes_platform_shape <- 
 flakes %>% 
-filter(!grepl("NA", `platform shape`)) %>% filter(!grepl("ret|retouch|pebble", type)) %>% 
-group_by(`platform shape`) %>% 
-tally() %>% 
-filter(!is.na(`platform shape`)) %>% 
-mutate(perc = round(n/sum(n),3) * 100) %>% 
-arrange(desc(perc))
+filter(!grepl("NA", `platform shape`)) %>% 
+  filter(!grepl("ret|retouch|pebble", type)) %>% 
+  group_by(`platform shape`) %>% 
+  tally() %>% 
+  filter(!is.na(`platform shape`)) %>% 
+  mutate(perc = round(n/sum(n),3) * 100) %>% 
+  arrange(desc(perc))
 
 triangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "triangle", ]$perc
 
@@ -353,7 +355,10 @@ new_flakes[new_flakes == "sb"] = "quadrangle"
 
 new_flakes[new_flakes == "sx"] = "fusiform"
 
-ggplot(new_flakes, aes(`Thickness at 25% max dim`, colour = `platform shape`)) +
+flakes_platform_shape_plot <- 
+ggplot(new_flakes, 
+       aes(`Thickness at 25% max dim`, 
+           colour = `platform shape`)) +
   geom_density()
 
 # dorsal flake cortex
@@ -395,12 +400,11 @@ thick_plot <- ggplot(flakes_L) +
   ggtitle("Distribution of flake thickness")
 
 # draw plot
-thick_plot
-
+# thick_plot
 
 ```
 
-```{r}
+```{r flake_platform}
 # the average thickness of platform 
 average_platform_thickness <- round(mean(flakes$`platform thickness`, na.rm = TRUE),2)
 # the average width of platform
@@ -411,8 +415,6 @@ average_platform_width <- round(mean(flakes$`platform width`, na.rm = TRUE),2)
 We found `r nrow(flakes)` flake pieces including complete flake (`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is `r average_platform_thickness`mm; the average width of platform is `r average_platform_width`mm.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular. 
 
 In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scars are the largest proportion.`r round(flakes_with_4_or_less_scars,0)`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Figure \@ref(fig:thicknessplot) shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
-
-
 
 ```{r corebasics}
 
@@ -575,8 +577,6 @@ cores_cortex_less_than_N <-
 
 ```
 
-
-
 ## Cores
 
 We found `r nrow(cores)` cores in the lithic assemblage. The average max dimension is `r average_max_dimension` and with an average weight of `r average_mass` g. This dimension is slightly larger than flakes.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(`r percentage_chert_cores`%).  There are various geometries of cores including irregular(`r percentage_iregular_cores`%), conic(`r percentage_conic_cores`%), column(`r percentage_column_cores`%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (`r percentage_core_type_single`%), double platform (`r percentage_core_type_double`%), and multiple platform (`r percentage_core_type_multp`%). According to technological reduction, they can be classified as ordinary core (`r percentage_ordinary_cores`%), blade core (`r percentage_blade_cores`%), disc core (`r percentage_disc_cores`%) and Levallois core(`r percentage_leva_cores`%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is `r average_core_scar_length` mm which is .  Most of them are covered with zero(`r core_cortex_zero`%) or low percentage cortex which are less than `r N`% (`r cores_cortex_less_than_N`%Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
@@ -673,6 +673,7 @@ retouch_raw_material_metrics %>%
   gather(variable, value, -material) %>% 
   filter(!is.na(value)) 
 
+retouch_raw_material_metrics_long_plot <- 
 ggplot(retouch_raw_material_metrics_long,
        aes(material,
            value)) +
@@ -681,7 +682,7 @@ ggplot(retouch_raw_material_metrics_long,
   facet_wrap(  ~ variable,
                scales = "free_y")
 
-
+retouch_raw_material_metrics_long_t_test <- 
 retouch_raw_material_metrics_long %>% 
   nest(-variable) %>% 
   mutate(t_test = map(data, ~t.test(value ~  material, 
@@ -714,6 +715,7 @@ retouch_raw_material_metrics_plot_log_mass <-
   ggpairs(aes(colour = material))
 
 # look at widths to check for circular shape or not
+retouch_raw_material_metrics_big_small_shape_plot <- 
 retouch_raw_material_metrics %>% 
   mutate(mass_group = ifelse(mass > 300, "big", 
                              ifelse(mass < 25, "small", NA))) %>% 
@@ -753,15 +755,19 @@ retouch_raw_material_metrics %>%
   arrange(desc(n))
 
 # general pattern for extracting single value to use in the text
-retouch_blank_perc_chert <- 
+retouch_blank_perc_flake <- 
 retouch_blank_type_tally %>% 
-  filter(type3 == "broken flake") %>% 
+  filter(type3 == "flake") %>% 
   select(perc) %>% 
   collect() %>% 
   .[["perc"]]
 
-```
+retouch_blank_perc_broken_flake <- 
+retouch_blank_type_tally %>% 
+  filter(type3 == "broken flake") %>% 
+  pull(perc) 
 
+```
 
 ```{r retouch_index_giur}
 
@@ -948,6 +954,7 @@ retouch_giur_per_section_sides %>%
   mutate(value = ifelse(variable == "mass", log(value), value))
 
 
+retouch_giur_per_section_sides_metrics_long_plot <- 
 ggplot(retouch_giur_per_section_sides_metrics_long,
        aes(giur_sections,
            value)) +
@@ -997,7 +1004,7 @@ percentage_with_ii_greater_than_N <-
   round(mean(retouch_ii_per_artefact$mean_ii < N)  * 100, 0)
 
 # histogram
- hist(retouch_ii_per_artefact$mean_ii)
+# hist(retouch_ii_per_artefact$mean_ii)
 
 # Investigate II with other metric variables
 
@@ -1046,7 +1053,6 @@ retouch_ii_metrics %>%
 # Consider II for each zone compare the frequency of 1s vs 0.5s for the II
 ```
 
-
 ```{r retouch_type2}
 
 retouch_type2_tally <- 
@@ -1060,9 +1066,21 @@ retouch_raw_material_metrics %>%
 retouch_type2_perc_scp <- 
 retouch_type2_tally %>% 
   filter(type2 == "scp") %>% 
-  select(perc) %>% 
-  collect() %>% 
-  .[["perc"]]
+  pull(perc) %>% 
+  round(1)
+
+retouch_type2_perc_dent <- 
+retouch_type2_tally %>% 
+  filter(type2 == "dent") %>% 
+  pull(perc) %>% 
+  round(1)
+
+retouch_type2_perc_notc <- 
+retouch_type2_tally %>% 
+  filter(type2 == "notch") %>% 
+  pull(perc) %>% 
+  round(1)
+
 
 # look at metrics by type2
 
@@ -1106,6 +1124,7 @@ anova_on_type2_and_metrics %>%
 
 # giur by type2
 library(ggforce)
+retouch_giur_metrics_plot <- 
 retouch_giur_metrics %>% 
   filter(type2 %in% c("scp", "dent", "notch", "borer,scp")) %>% 
   select(type2, mean_giur) %>% 
@@ -1183,12 +1202,164 @@ retouch_curvature_metrics %>%
 
 ```
 
-
 ## Retouched pieces
 
+A total of `r nrow(retouch)` retouched pieces were found in the assemblage, accounting for `r retouch_as_proportion_of_all_artefacts`% of lithic assemblage. The average max dimension is `r average_max_dimension_of_retouch`mm. Compared with unretouched flakes, retouched pieces are generally larger, with retouched pieces having greater length, max dimension, width and thickness. This indicates that after flake production, the knappers prefer to choose bigger flakes or flake fragments to retouch, especially, longer and thicker ones. In terms of raw materials, we compared all variables between stone artefacts made of chert and limestone, the difference between them are minor except for higher cortex percentages and platform thickness among limestone artefacts. Retouched pieces are primarily made on broken flakes (`r retouch_blank_perc_broken_flake`%), flakes (`r retouch_blank_perc_flake`%), and a small number of them are made on either chunks or pebbles. Side scrapers dominate the typological classification of retouched pieces (`r retouch_type2_perc_scp`%), followed by denticulates (`r retouch_type2_perc_dent`%) and notched pieces (`r retouch_type2_perc_notc`%).
 
-A total of `r nrow(retouch)` retouched pieces were found in the assemblage, accounting for `r retouch_as_proportion_of_all_artefacts`% of lithic assemblage. The average max dimension is `r average_max_dimension_of_retouch`mm. Compared with unretouched flakes, retouched pieces are generally larger according to the fact that retouched pieces are greater on length, max dimension, width and thickness. This indicates that after flake production, the knappers prefer to choose bigger flakes or flake fragments to retouch, especially, longer and thicker ones. In terms of raw materials, we compared all variables between stone artefacts made of chert and limestone, the difference between them are minor except the cortex percentage and platform thickness of limestone are larger than chert. % retouched pieces are made on flakes (%) and flake breaks (%), a small number of them are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Over % retouched pieces have more than 1 edge. The edge shapes of 1858 retouched edges were recorded from retouched pieces. The edge shapes include convex, concave, straight, denticulate, end, notch, borer. Among them, straight edge constitutes the largest proportion of the retouched edge (n=575 %) followed by convex(n=395) and concave(n=248)(significance of straight edge). 
 
+
+```{r retouch_edge_shape}
+# edge shape, check to see that number of edge shapes matches 
+# count of edge shapes
+retouch$`edge shape` <- gsub(" ", "", retouch$`edge shape`) # 1101
+number_of_edge_shapes <- # 1101 items
+map(retouch$`edge shape`, ~unlist(strsplit(., ",|\\."))) %>% 
+  map_int(., length)
+
+edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
+           number_of_edge_shapes) # 1101 rows
+
+edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes) # 1101
+edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE) # 1101
+
+
+# only get the retouched artefacts where the count of edges matches the number of edge types
+retouch_edge_shapes <- retouch[ edge_checking$diffl, ] # 783 rows
+
+# retouch_edge_shapes$number <- gsub("f_", "", retouch_edge_shapes$number)
+retouch_edge_shapes_metrics <- 
+  left_join(retouch_edge_shapes, 
+            flakes_clean_names, 
+            by =  "number")
+retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
+
+# plot distribution of edge numbers
+retouch_edge_numbers_histogram <- 
+ggplot(retouch_edge_shapes_metrics,
+       aes(number.of.edge)) +
+  geom_histogram()
+
+# tally of edge numbers
+retouch_edge_shapes_metrics_tally <- 
+  retouch_edge_shapes_metrics %>% 
+  group_by(number.of.edge) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n), 3) * 100)
+
+retouch_edge_shapes_metrics_tally_1_edge <- 
+retouch_edge_shapes_metrics_tally %>% 
+  filter(number.of.edge == 1) %>% 
+  pull(perc)
+
+# edge layers
+retouch_edge_layer_tally <- 
+  retouch %>% 
+  group_by(`number of layers`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n), 3) * 100)
+
+retouch_edge_layer_tally_1_layer <- 
+retouch_edge_layer_tally %>% 
+  filter(`number of layers` == 1) %>% 
+  pull(perc)
+           
+
+# for all artefacts with 1 retouched edge, what shape is that?
+retouch_edge_shapes_tally <- 
+retouch_edge_shapes %>% 
+  # filter(`number of edge` == 1) %>% 
+  group_by(`edge shape`) %>% 
+  tally() %>% 
+   mutate(perc = round(n / sum(n), 3) * 100) %>% 
+  arrange(desc(n)) 
+
+retouch_edge_shapes_tally_strt <- 
+retouch_edge_shapes_tally %>% 
+  filter(`edge shape` == "strt") %>% 
+  pull(perc)
+
+retouch_edge_shapes_tally_cvx <- 
+retouch_edge_shapes_tally %>% 
+  filter(`edge shape` == "cvx") %>% 
+  pull(perc)
+
+
+# investigate metrics by edge shape
+retouch_edge_shapes_metrics_by_edge <- 
+retouch_edge_shapes_metrics %>% 
+  group_by(edge.shape) %>%
+  mutate(count = n()) %>% # how many in each group?
+  summarise_if(is.numeric, mean, na.rm = TRUE) %>% 
+  arrange(desc(count))  # arrange from biggest group to smallest
+
+# just look at the first five rows, and basic metrics
+
+retouch_edge_shapes_basic_metrics_by_edge <- 
+retouch_edge_shapes_metrics_by_edge[1:5, ]  %>% 
+  select(one_of(c("edge.shape", basic_metrics)))
+
+# are notches smaller than the others?
+retouch_notch_others_mass <- 
+retouch_edge_shapes_metrics_by_edge %>% 
+  mutate(notch = grepl("notch", edge.shape)) %>% 
+  ggplot(aes(notch, mass)) +
+  geom_boxplot() +
+  scale_y_log10() # no
+
+# Plot these
+library(tidyr)
+plot_retouch_edge_type_basic_metrics <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", basic_metrics))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  ggplot(aes(edge.shape,
+             value)) +
+    geom_boxplot() +
+  facet_wrap( ~ variable, scales = "free_y")
+
+
+# seems that it's not highly patterned, but maybe mass is worth a closer look
+plot_retouch_edge_type_mass <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", "mass"))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  ggplot(aes(edge.shape,
+             value)) +
+    geom_boxplot()  +
+  scale_y_log10()
+# not a lot of difference 
+
+# ANOVA to test for statistical difference
+anova_on_edge_shape_and_metrics <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", basic_metrics))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  nest(-variable) %>% 
+  mutate(anova = map(data, ~aov(value ~ edge.shape, data = .)))
+
+# extract p-values and find the variable with significant different
+anova_on_edge_shape_and_metrics_pvalues <- 
+anova_on_edge_shape_and_metrics %>%
+  mutate(model = map(anova, ~tidy(.x, data = .))) %>% 
+  unnest(model) %>% 
+  filter(term != "Residuals") %>% 
+  filter( p.value <= 0.05)
+
+anova_on_edge_shape_and_metrics_tukeyhsd <- 
+anova_on_edge_shape_and_metrics %>% 
+  filter(variable %in% anova_on_edge_shape_and_metrics_pvalues$variable) %>% 
+  mutate(tukeyhsd = map(anova, 
+                        ~tidy(TukeyHSD(.x, 
+                                       data = ., 
+                                       ordered = TRUE)))) %>% 
+  unnest(tukeyhsd)  %>% 
+  filter(adj.p.value <= 0.05)
+```
+
+Most retouched pieces (`r retouch_edge_shapes_metrics_tally_1_edge`%) have just one retouched edge, and about one third have two edges. Retouch was generally observed as a single layer of flake scars (`r `number of layers`%). The edge shapes are mostly straight (`r retouch_edge_shapes_tally_strt`%) and convex (`r retouch_edge_shapes_tally_cvx`%), with smaller amounts of concave, denticulate, end, notch, borers, and various combinations of these features. 
 
 ```{r retouch_edge_angle}
 # average edge angle
@@ -1281,6 +1452,7 @@ edge_angle %>%
                                                            na.rm = TRUE)) 
 
 # is there a difference in organisation of edge angle between Levallois and non-L
+edge_angle_organisation_plot <- 
 ggplot(edge_angle_organisation,
        aes(type,
            mean_diff_between_angles_on_the_artefact)) +
@@ -1351,142 +1523,8 @@ edge_angle_metrics_lev %>%
 df <- paste0(edge_angle_metrics_lev_aov$df[1], ", ", edge_angle_metrics_lev_aov$df[2])
 ```
 
-We calculated the edge angle by measuring the width at the 3 mm depth of the edge, following Eren and Lycett (2016). The average angle of each edge is `r mean_edge_angle_overall` degrees. Notably, there is a high proportion of the assemblage with relatively high edge angles, `percentage_with_edge_angle_greater_than_N`% of artefacts have average edge anlges greater than `r N`, which is not common in other sites (citation needed!). This feature can be explained as a result of the available raw material nodules which had a slab or tablet-like shape, leading to  steep edge angles in the flakes peices that are close to the edge angles on the unworked nodules. Edge angles are similar in mean and variation across the most abundant different types of retouched artefacts (F(`r df`) = `r round(edge_angle_metrics_lev_aov$statistic,2)[1]`, p = `r  round(edge_angle_metrics_lev_aov$p.value,2)[1]`). 
+We calculated the edge angle by measuring the width at the 3 mm depth of the edge, following Eren and Lycett (2016). The average angle of each edge is `r mean_edge_angle_overall` degrees. Notably, there is a high proportion of the assemblage with relatively high edge angles, `percentage_with_edge_angle_greater_than_N`% of artefacts have average edge anlges greater than `r N`, which is not common in other sites (citation needed!). This feature may be explained as a result of the available raw material nodules which had a slab or tablet-like shape, leading to  steep edge angles in the flakes peices that are close to the edge angles on the unworked nodules. Edge angles are similar in mean and variation across the most abundant different types of retouched artefacts (F(`r df`) = `r round(edge_angle_metrics_lev_aov$statistic,2)[1]`, p = `r  round(edge_angle_metrics_lev_aov$p.value,2)[1]`). 
 
-
-```{r retouch_edge_shape}
-# edge shape, check to see that number of edge shapes matches 
-# count of edge shapes
-retouch$`edge shape` <- gsub(" ", "", retouch$`edge shape`) # 1101
-number_of_edge_shapes <- # 1101 items
-map(retouch$`edge shape`, ~unlist(strsplit(., ",|\\."))) %>% 
-  map_int(., length)
-
-edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
-           number_of_edge_shapes) # 1101 rows
-
-edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes) # 1101
-edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE) # 1101
-
-
-# only get the retouched artefacts where the count of edges matches the number of edge types
-retouch_edge_shapes <- retouch[ edge_checking$diffl, ] # 783 rows
-
-# retouch_edge_shapes$number <- gsub("f_", "", retouch_edge_shapes$number)
-retouch_edge_shapes_metrics <- 
-  left_join(retouch_edge_shapes, 
-            flakes_clean_names, 
-            by =  "number")
-retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
-
-# plot distribution of edge numbers
-retouch_edge_numbers_histogram <- 
-ggplot(retouch_edge_shapes_metrics,
-       aes(number.of.edge)) +
-  geom_histogram()
-
-# tally of edge numbers
-retouch_edge_shapes_metrics_tally <- 
-  retouch_edge_shapes_metrics %>% 
-  group_by(number.of.edge) %>% 
-  tally() %>% 
-  mutate(perc = round(n / sum(n), 3) * 100)
-
-retouch_edge_shapes_metrics_tally_1_edge <- 
-retouch_edge_shapes_metrics_tally %>% 
-  filter(number.of.edge == 1) %>% 
-  pull(perc)
-
-# edge layers
-retouch_edge_layer_tally <- 
-  retouch %>% 
-  group_by(`number of layers`) %>% 
-  tally() %>% 
-  mutate(perc = round(n / sum(n), 3) * 100)
-
-retouch_edge_layer_tally_1_layer <- 
-retouch_edge_layer_tally %>% 
-  filter(`number of layers` == 1) %>% 
-  pull(perc)
-           
-
-# for all artefacts with 1 retouched edge, what shape is that?
-retouch_edge_shapes_tally <- 
-retouch_edge_shapes %>% 
-  # filter(`number of edge` == 1) %>% 
-  group_by(`edge shape`) %>% 
-  tally() %>% 
-  arrange(desc(n)) 
-
-
-# investigate metrics by edge shape
-retouch_edge_shapes_metrics_by_edge <- 
-retouch_edge_shapes_metrics %>% 
-  group_by(edge.shape) %>%
-  mutate(count = n()) %>% # how many in each group?
-  summarise_if(is.numeric, mean, na.rm = TRUE) %>% 
-  arrange(desc(count))  # arrange from biggest group to smallest
-
-# just look at the first five rows, and basic metrics
-
-retouch_edge_shapes_basic_metrics_by_edge <- 
-retouch_edge_shapes_metrics_by_edge[1:5, ]  %>% 
-  select(one_of(c("edge.shape", basic_metrics)))
-
-# Plot these
-library(tidyr)
-plot_retouch_edge_type_basic_metrics <- 
-retouch_edge_shapes_metrics %>% 
-  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
-  select(one_of(c("edge.shape", basic_metrics))) %>% 
-  gather(variable, value, -edge.shape) %>% 
-  ggplot(aes(edge.shape,
-             value)) +
-    geom_boxplot() +
-  facet_wrap( ~ variable, scales = "free_y")
-
-
-# seems that it's not highly patterned, but maybe mass is worth a closer look
-plot_retouch_edge_type_mass <- 
-retouch_edge_shapes_metrics %>% 
-  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
-  select(one_of(c("edge.shape", "mass"))) %>% 
-  gather(variable, value, -edge.shape) %>% 
-  ggplot(aes(edge.shape,
-             value)) +
-    geom_boxplot()  +
-  scale_y_log10()
-# not a lot of difference 
-
-# ANOVA to test for statistical difference
-anova_on_edge_shape_and_metrics <- 
-retouch_edge_shapes_metrics %>% 
-  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
-  select(one_of(c("edge.shape", basic_metrics))) %>% 
-  gather(variable, value, -edge.shape) %>% 
-  nest(-variable) %>% 
-  mutate(anova = map(data, ~aov(value ~ edge.shape, data = .)))
-
-# extract p-values and find the variable with significant different
-anova_on_edge_shape_and_metrics_pvalues <- 
-anova_on_edge_shape_and_metrics %>%
-  mutate(model = map(anova, ~tidy(.x, data = .))) %>% 
-  unnest(model) %>% 
-  filter(term != "Residuals") %>% 
-  filter( p.value <= 0.05)
-
-anova_on_edge_shape_and_metrics_tukeyhsd <- 
-anova_on_edge_shape_and_metrics %>% 
-  filter(variable %in% anova_on_edge_shape_and_metrics_pvalues$variable) %>% 
-  mutate(tukeyhsd = map(anova, 
-                        ~tidy(TukeyHSD(.x, 
-                                       data = ., 
-                                       ordered = TRUE)))) %>% 
-  unnest(tukeyhsd)  %>% 
-  filter(adj.p.value <= 0.05)
-```
-
-The majority of tools (`r retouch_edge_shapes_metrics_tally_1_edge`%) are retouched on only one edge of the artefact, and have only one layer of retouch on the worked edges (`r `number of layers`%).
 
 ### Indices
 
