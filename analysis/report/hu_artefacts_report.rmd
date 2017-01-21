@@ -33,6 +33,11 @@ debris <- quiet_read(file_name, sheet = "chunk&debris")$result
 retouch <- quiet_read(file_name, sheet = "retouch")$result
 scar_direction <- quiet_read(file_name, sheet = "scar direction ")$result
 edge_angle <- quiet_read(file_name, sheet = "edge angle")$result
+
+# handy function for getting a single value from a tibble
+pull <- function(x,y) {
+  x[,if(is.name(substitute(y))) deparse(substitute(y)) else y, drop = FALSE][[1]]
+}
 ```
 
 ```{r eval=TRUE, echo=FALSE}
@@ -982,20 +987,45 @@ edge_angle %>%
 library(ggforce)
 edge_angle_metrics_lev <- 
 edge_angle_metrics %>% 
-  filter(type %in% c("leva", "leva ","leva flake ", "ret")) 
+  filter(type %in% c("leva", "leva ","leva flake ", "ret")) %>% 
+  mutate(type = ifelse(type %in% c("leva", "leva ","leva flake "), 
+                       "leva", type))
 
-
-  ggplot(edge_angle_metrics_lev,
+ggplot(edge_angle_metrics_lev,
        aes(type,
            value)) +
   geom_boxplot() +
-  geom_sina()
+  geom_sina(maxwidth = 1)
+
+# sig diff between leval and non-L edge angles?
+  edge_angle_metrics_lev %>%
+  t.test(value ~ type, data = .)  %>% 
+  tidy()
   
-# ANOVA to test for statistical difference
+# check for variability of edge angles for L and non-L
+edge_angle_metrics_lev_var <- 
+  edge_angle_metrics_lev %>% 
+    group_by(number, type) %>% 
+    summarise(cv = raster::cv(value, na.rm = TRUE),
+              sd = sd(value, na.rm = TRUE)) %>% 
+    filter(!is.na(sd)) 
+
+
+ggplot(edge_angle_metrics_lev_var,
+       aes(type,
+           cv)) +
+  geom_boxplot() +
+  geom_sina(maxwidth = 1)
+
+  
+# ANOVA to test for statistical difference between edge angles and many variables
 anova_on_edge_angle_metrics_lev <- 
 edge_angle_metrics_lev %>% 
   select(value, type) %>% 
-  aov(value ~ type, data = .)
+  aov(value ~ type, data = .) %>% 
+  tidy()
+
+
 
 # extract p-values and find the variable with significant different
 anova_on_type2_and_metrics_pvalues <- 
