@@ -33,7 +33,8 @@ debris <- quiet_read(file_name, sheet = "chunk&debris")$result
 retouch <- quiet_read(file_name, sheet = "retouch")$result
 scar_direction <- quiet_read(file_name, sheet = "scar direction ")$result
 edge_angle <- quiet_read(file_name, sheet = "edge angle")$result
-
+core_scars_length <- quiet_read(file_name, sheet = "core flake scars")$result
+names(core_scars_length) <- make.names(names(core_scars_length))
 # handy function for getting a single value from a tibble
 pull <- function(x,y) {
   x[,if(is.name(substitute(y))) deparse(substitute(y)) else y, drop = FALSE][[1]]
@@ -433,11 +434,142 @@ percentage_chert_cores <-
   select(material) %>% 
   group_by(material) %>% 
   tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 1)) %>% 
+  filter(material == "chert") %>% 
+  pull(perc)
+
+#  percentage of each geometries of cores 
+percentage_iregular_cores <- 
+  cores %>%
+  select(`core geometry`) %>% 
+  group_by(`core geometry`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 1))  %>% 
+  filter(`core geometry` == "iregular") %>% 
+  pull(perc)
+
+percentage_conic_cores <- 
+  cores %>%
+  select(`core geometry`) %>% 
+  group_by(`core geometry`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 1))  %>% 
+  filter(`core geometry` == "conic") %>% 
+  pull(perc)
+
+percentage_column_cores <- 
+  cores %>%
+  select(`core geometry`) %>% 
+  group_by(`core geometry`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 1))  %>% 
+  filter(`core geometry` == "column") %>% 
+  pull(perc)
+  
+# different platform number of each core
+
+cores_type_tally <-
+  cores %>% 
+  mutate(cores_type = ifelse(type %in% c("leva ", "leva? ", "leva?", "leva core", "leva?disc?", "pre leva?"), "leva", 
+         ifelse(type %in% c("blade ", "blade?"), "blade", type)))
+table(cores_type_tally$cores_type)
+
+percentage_core_type_tally <- 
+  cores_type_tally %>% 
+  select(cores_type) %>% 
+  group_by(cores_type) %>% 
+  tally() %>% 
+  mutate(perc = round(n/ sum(n) * 100, 1)) 
+
+
+percentage_core_type_single %>% 
+  filter(cores_type == "single") %>% 
+  pull(perc)
+
+ percentage_core_type_double <-
+   percentage_core_type_tally %>% 
+  filter(cores_type == "double") %>% 
+  pull(perc)
+         
+ percentage_core_type_multp <-
+   percentage_core_type_tally %>% 
+  filter(cores_type == "multp") %>% 
+  pull(perc)
+ 
+  percentage_core_type_disc <-
+   percentage_core_type_tally %>% 
+  filter(cores_type == "disc") %>% 
+  pull(perc)
+   
+ # percentage of technological type of cores
+  cores_type_tally2 <-
+    cores_type_tally %>% 
+    mutate(core_tech_type = ifelse(cores_type %in% c("single", "multp", "double"), "ordinary", cores_type))
+  
+  percentage_cores_type_tally2 <-
+    cores_type_tally2 %>% 
+    select(core_tech_type) %>% 
+    group_by(core_tech_type) %>% 
+    tally() %>% 
+    mutate(perc = round(n / sum(n) * 100, 1))
+
+  percentage_ordinary_cores <-
+    percentage_cores_type_tally2 %>% 
+    filter(core_tech_type == "ordinary") %>% 
+    pull(perc)
+  
+  percentage_disc_cores <-
+    percentage_cores_type_tally2 %>% 
+    filter(core_tech_type == "disc") %>% 
+    pull(perc)
+  
+  percentage_blade_cores <-
+    percentage_cores_type_tally2 %>% 
+    filter(core_tech_type == "blade") %>% 
+    pull(perc)
+  
+  percentage_leva_cores <-
+    percentage_cores_type_tally2 %>% 
+    filter(core_tech_type == "leva") %>% 
+    pull(perc)
+  
+# average core scar length
+  
+core_scars_length_long <-   
+  core_scars_length %>% 
+    gather(variable, value, -number) 
+
+
+average_core_scar_length <- round(mean(core_scars_length_long$value, na.rm = TRUE) , 1)
+  
+# cortex percentage 
+
+cortex_percentage<- 
+  cores %>% 
+  select(`cortex percentage`) %>% 
+  group_by(`cortex percentage`) %>% 
+  tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 1))
 
 
+core_cortex_zero <-
+  cortex_percentage %>% 
+  filter(`cortex percentage` == 0) %>% 
+  pull(perc)
   
 
+# what percentage of cores have a cortex percentage less than N
+N <-  30
+cores_cortex_less_than_N <-
+  cortex_percentage %>% 
+  filter(`cortex percentage` < N) %>% 
+  pull(perc) %>% 
+  sum()
+  
+# core cortex location 
+ cortex_location_percentage <-
+   cores %>% 
+   mutate(cortext_location_percentage == )
 
 
 
@@ -447,7 +579,7 @@ percentage_chert_cores <-
 
 ## Cores
 
-We found `r nrow(cores)` cores in the lithic assemblage. The average max dimension is `r average_max_dimension` and with an average weight of `r average_mass` g. This dimension is slightly larger than flakes.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(%).  There are various geometries of cores including irregular(%), conic(%), column(%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is xxx mm which is .  Most of them are covered with zero(%) or low percentage cortex( %Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
+We found `r nrow(cores)` cores in the lithic assemblage. The average max dimension is `r average_max_dimension` and with an average weight of `r average_mass` g. This dimension is slightly larger than flakes.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(`r percentage_chert_cores`%).  There are various geometries of cores including irregular(`r percentage_iregular_cores`%), conic(`r percentage_conic_cores`%), column(`r percentage_column_cores`%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (`r percentage_core_type_single`%), double platform (`r percentage_core_type_double`%), and multiple platform (`r percentage_core_type_multp`%). According to technological reduction, they can be classified as ordinary core (`r percentage_ordinary_cores`%), blade core (`r percentage_blade_cores`%), disc core (`r percentage_disc_cores`%) and Levallois core(`r percentage_leva_cores`%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is `r average_core_scar_length` mm which is .  Most of them are covered with zero(`r core_cortex_zero`%) or low percentage cortex which are less than `r N`% (`r cores_cortex_less_than_N`%Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
 
 ```{r retouch}
 retouch_as_proportion_of_all_artefacts <- round(nrow(retouch) / total_number_of_artefacts * 100, 1)
