@@ -24,6 +24,8 @@ library(readxl)
 library(ggplot2)
 library(tidyr)
 library(purrr)
+library(GGally)
+library(ggforce)
 # set working direcoty to source
 file_name <- "../data/artefacts_new_name.xls" 
 quiet_read <- purrr::quietly(readxl::read_excel)
@@ -482,7 +484,8 @@ percentage_core_type_tally <-
   mutate(perc = round(n/ sum(n) * 100, 1)) 
 
 
-percentage_core_type_single %>% 
+percentage_core_type_single <- 
+  percentage_core_type_tally %>% 
   filter(cores_type == "single") %>% 
   pull(perc)
 
@@ -695,6 +698,7 @@ retouch_raw_material_metrics_long %>%
 ```
 
 ```{r retouch_piece_shape}
+
 retouch_raw_material_metrics_plot <- 
 retouch_raw_material_metrics %>% 
   select(material,  one_of(metric_variables)) %>% 
@@ -1075,7 +1079,7 @@ retouch_raw_material_metrics %>%
 
 # ANOVA to test for statistical difference
 anova_on_type2_and_metrics <- 
-retouch_edge_shapes_metrics %>% 
+retouch_raw_material_metrics %>% 
    filter(type2 %in% c("scp", "dent", "notch", "borer,scp")) %>% 
   select(one_of(c("type2", basic_metrics))) %>% 
   gather(variable, value, -type2) %>% 
@@ -1382,7 +1386,7 @@ ggplot(retouch_edge_shapes_metrics,
   geom_histogram()
 
 # tally of edge numbers
-retouch_edge_shapes_tally <- 
+retouch_edge_shapes_metrics_tally <- 
   retouch_edge_shapes_metrics %>% 
   group_by(number.of.edge) %>% 
   tally() %>% 
