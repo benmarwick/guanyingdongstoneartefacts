@@ -566,10 +566,7 @@ cores_cortex_less_than_N <-
   pull(perc) %>% 
   sum()
   
-# core cortex location 
- cortex_location_percentage <-
-   cores %>% 
-   mutate(cortext_location_percentage == )
+
 
 
 
