@@ -424,6 +424,22 @@ cores_platform_numbers <-
 
 single_platform <- cores_platform_numbers$perc[cores_platform_numbers$platform == 1]
 
+average_max_dimension <- mean(cores$`max dimension`, na.rm = TRUE)
+average_mass <- mean(cores$mass, na.rm = TRUE)
+
+# How many chert in cores 
+percentage_chert_cores <-
+  cores %>% 
+  select(material) %>% 
+  group_by(material) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 1))
+
+
+  
+
+
+
 
 ```
 
@@ -431,7 +447,7 @@ single_platform <- cores_platform_numbers$perc[cores_platform_numbers$platform =
 
 ## Cores
 
-We found `r nrow(cores)` cores in the lithic assemblage. The average dimension is xxx and with an average weight of xxx g. This dimension is slightly larger than flakes indicating The average max dimensions of cores are xx mm.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(%).  There are various geometries of cores including irregular(%), conic(%), column(%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is xxx mm which is .  Most of them are covered with zero(%) or low percentage cortex( %Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
+We found `r nrow(cores)` cores in the lithic assemblage. The average max dimension is `r average_max_dimension` and with an average weight of `r average_mass` g. This dimension is slightly larger than flakes.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(%).  There are various geometries of cores including irregular(%), conic(%), column(%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (%), double platform (%) and multiple platform (%). According to technological reduction, they can be classified as ordinary core (%), blade core (%), disc core (%) and Levallois core(%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is xxx mm which is .  Most of them are covered with zero(%) or low percentage cortex( %Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
 
 ```{r retouch}
 retouch_as_proportion_of_all_artefacts <- round(nrow(retouch) / total_number_of_artefacts * 100, 1)
