@@ -565,6 +565,42 @@ retouch_raw_material_metrics_long %>%
 
 ```
 
+```{r retouch_piece_shape}
+retouch_raw_material_metrics_plot <- 
+retouch_raw_material_metrics %>% 
+  select(material,  one_of(metric_variables)) %>% 
+  select(material, length, Width.at.50..max.dim, Thickness.at.50..max.dim) %>%
+  ggpairs(aes(colour = material))
+
+retouch_raw_material_metrics_plot_log_mass <- 
+  retouch_raw_material_metrics %>% 
+  select(material,  one_of(metric_variables)) %>% 
+  mutate(lw = length / Width.at.50..max.dim,
+         log_mass = log(mass)) %>% 
+  select(material, lw, log_mass) %>%
+  ggpairs(aes(colour = material))
+
+# look at widths to check for circular shape or not
+retouch_raw_material_metrics %>% 
+  mutate(mass_group = ifelse(mass > 300, "big", 
+                             ifelse(mass < 25, "small", NA))) %>% 
+  dplyr::select(dplyr::matches("Width|material|number|mass_group")) %>% 
+  select(-scar.number, 
+         -`number of layers`,
+         -`number of edge`, 
+         -`number of burins`,
+         -Oriented.width) %>% 
+  
+  gather(variable, value, -material, -number, -mass_group) %>% 
+  filter(!is.na(mass_group)) %>% 
+  ggplot(aes(variable,
+             value,
+             colour = mass_group)) +
+  geom_boxplot() +
+  geom_sina()
+
+
+```
 
 ```{r retouch_blank_type}
 
@@ -591,114 +627,6 @@ retouch_blank_type_tally %>%
   collect() %>% 
   .[["perc"]]
 
-```
-
-
-
-```{r retouch_edge_shape}
-# edge shape, check to see that number of edge shapes matches 
-# count of edge shapes
-retouch$`edge shape` <- gsub(" ", "", retouch$`edge shape`) # 1101
-number_of_edge_shapes <- # 1101 items
-map(retouch$`edge shape`, ~unlist(strsplit(., ",|\\."))) %>% 
-  map_int(., length)
-
-edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
-           number_of_edge_shapes) # 1101 rows
-
-edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes) # 1101
-edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE) # 1101
-
-
-# only get the retouched artefacts where the count of edges matches the number of edge types
-retouch_edge_shapes <- retouch[ edge_checking$diffl, ] # 783 rows
-
-# retouch_edge_shapes$number <- gsub("f_", "", retouch_edge_shapes$number)
-retouch_edge_shapes_metrics <- 
-  left_join(retouch_edge_shapes, 
-            flakes_clean_names, 
-            by =  "number")
-retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
-           
-
-
-# for all artefacts with 1 retouched edge, what shape is that?
-retouch_edge_shapes_tally <- 
-retouch_edge_shapes %>% 
-  # filter(`number of edge` == 1) %>% 
-  group_by(`edge shape`) %>% 
-  tally() %>% 
-  arrange(desc(n)) 
-
-sum(retouch_edge_shapes_tally$n)
-
-
-
-# investigate metrics by edge shape
-retouch_edge_shapes_metrics_by_edge <- 
-retouch_edge_shapes_metrics %>% 
-  group_by(edge.shape) %>%
-  mutate(count = n()) %>% # how many in each group?
-  summarise_if(is.numeric, mean, na.rm = TRUE) %>% 
-  arrange(desc(count))  # arrange from biggest group to smallest
-
-# just look at the first five rows, and basic metrics
-
-retouch_edge_shapes_basic_metrics_by_edge <- 
-retouch_edge_shapes_metrics_by_edge[1:5, ]  %>% 
-  select(one_of(c("edge.shape", basic_metrics)))
-
-# Plot these
-library(tidyr)
-plot_retouch_edge_type_basic_metrics <- 
-retouch_edge_shapes_metrics %>% 
-  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
-  select(one_of(c("edge.shape", basic_metrics))) %>% 
-  gather(variable, value, -edge.shape) %>% 
-  ggplot(aes(edge.shape,
-             value)) +
-    geom_boxplot() +
-  facet_wrap( ~ variable, scales = "free_y")
-
-
-# seems that it's not highly patterned, but maybe mass is worth a closer look
-plot_retouch_edge_type_mass <- 
-retouch_edge_shapes_metrics %>% 
-  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
-  select(one_of(c("edge.shape", "mass"))) %>% 
-  gather(variable, value, -edge.shape) %>% 
-  ggplot(aes(edge.shape,
-             value)) +
-    geom_boxplot()  +
-  scale_y_log10()
-# not a lot of difference 
-
-# ANOVA to test for statistical difference
-anova_on_edge_shape_and_metrics <- 
-retouch_edge_shapes_metrics %>% 
-  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
-  select(one_of(c("edge.shape", basic_metrics))) %>% 
-  gather(variable, value, -edge.shape) %>% 
-  nest(-variable) %>% 
-  mutate(anova = map(data, ~aov(value ~ edge.shape, data = .)))
-
-# extract p-values and find the variable with significant different
-anova_on_edge_shape_and_metrics_pvalues <- 
-anova_on_edge_shape_and_metrics %>%
-  mutate(model = map(anova, ~tidy(.x, data = .))) %>% 
-  unnest(model) %>% 
-  filter(term != "Residuals") %>% 
-  filter( p.value <= 0.05)
-
-anova_on_edge_shape_and_metrics_tukeyhsd <- 
-anova_on_edge_shape_and_metrics %>% 
-  filter(variable %in% anova_on_edge_shape_and_metrics_pvalues$variable) %>% 
-  mutate(tukeyhsd = map(anova, 
-                        ~tidy(TukeyHSD(.x, 
-                                       data = ., 
-                                       ordered = TRUE)))) %>% 
-  unnest(tukeyhsd)  %>% 
-  filter(adj.p.value <= 0.05)
 ```
 
 
@@ -778,6 +706,140 @@ retouch_giur_metrics %>%
            one_of(non_metrics))) %>% 
   select(-number, -type, -type2, -layer, -comment) %>% 
   ggpairs()
+```
+
+```{r retouch_guir_by_zone}
+
+retouch_giur_per_section_sides <- 
+retouch_giur_per_section %>% 
+  select(number, section,  t_T) %>% 
+  spread(section,  t_T) %>% 
+  mutate(giur_sections = 
+           # one side
+             ifelse(is.na(section_1_) &
+                    !is.na(section_2_) &
+                    is.na(section_3_) &
+                    !is.na(section_4_) &
+                    is.na(section_5_) &
+                    !is.na(section_6_) &
+                    is.na(section_7_) &
+                    is.na(section_8_), 
+                    "2_4_6", 
+          # the other side
+             ifelse(is.na(section_1_) &
+                    is.na(section_2_) &
+                    !is.na(section_3_) &
+                    is.na(section_4_) &
+                    !is.na(section_5_) &
+                    is.na(section_6_) &
+                    !is.na(section_7_) &
+                    is.na(section_8_), 
+                    "3_5_7", 
+          # both sides
+             ifelse(is.na(section_1_) &
+                    !is.na(section_2_) &
+                    !is.na(section_3_) &
+                    !is.na(section_4_) &
+                    !is.na(section_5_) &
+                    !is.na(section_6_) &
+                    !is.na(section_7_) &
+                    is.na(section_8_), 
+                    "2_4_6_3_5_7", 
+          # one end
+             ifelse(!is.na(section_1_) &
+                    is.na(section_2_) &
+                    is.na(section_3_) &
+                    is.na(section_4_) &
+                    is.na(section_5_) &
+                    is.na(section_6_) &
+                    is.na(section_7_) &
+                    is.na(section_8_), 
+                    "1",
+          # the other end
+             ifelse(is.na(section_1_) &
+                    is.na(section_2_) &
+                    is.na(section_3_) &
+                    is.na(section_4_) &
+                    is.na(section_5_) &
+                    is.na(section_6_) &
+                    is.na(section_7_) &
+                    !is.na(section_8_), 
+                    "8",
+          # both ends
+             ifelse(!is.na(section_1_) &
+                    is.na(section_2_) &
+                    is.na(section_3_) &
+                    is.na(section_4_) &
+                    is.na(section_5_) &
+                    is.na(section_6_) &
+                    is.na(section_7_) &
+                    !is.na(section_8_), 
+                    "1_8",
+                    NA))))))) %>% 
+  filter(!is.na(giur_sections)) %>% 
+  mutate(mean_giur = rowMeans(select(., starts_with("section_")), na.rm = TRUE))
+
+# which group has the highest GIUR?
+retouch_giur_per_section_sides_by_group <- 
+retouch_giur_per_section_sides %>% 
+  group_by(giur_sections) %>% 
+  summarise(mean_group_giur = round(mean(mean_giur),2),
+            n = n()) %>% 
+  mutate(perc = round(n/sum(n) * 100,1)) %>% 
+  arrange(desc(mean_group_giur))
+# the end scrapers are the most numerous and have the highest giur
+
+# plot it
+retouch_giur_per_section_sides_plot <- 
+ggplot(retouch_giur_per_section_sides,
+       aes(reorder(giur_sections, mean_giur),
+           mean_giur)) +
+  geom_boxplot() +
+  geom_sina()
+
+# ANOVA giur by group
+retouch_giur_per_section_sides_anova <- 
+retouch_giur_per_section_sides %>% 
+  aov(mean_giur ~ giur_sections, data = .) %>% 
+  TukeyHSD() %>% 
+  tidy() %>% 
+  filter(adj.p.value < 0.05)
+# yes, sig diffs
+
+# now what about size and these groups?
+retouch_giur_per_section_sides_metrics_long <- 
+retouch_giur_per_section_sides %>% 
+  left_join(retouch_giur_metrics) %>% 
+  select(giur_sections,  one_of(metric_variables)) %>% 
+  gather(variable, value, -giur_sections) %>% 
+  mutate(value = ifelse(variable == "mass", log(value), value))
+
+
+ggplot(retouch_giur_per_section_sides_metrics_long,
+       aes(giur_sections,
+           value)) +
+  geom_boxplot() +
+  geom_sina() +
+  facet_wrap( ~variable, scales = "free_y")
+
+# just look at blade-like artefacts because of ambiguity about sides and ends
+retouch_giur_per_section_sides_blade_plot <- 
+retouch_giur_per_section_sides %>% 
+  left_join(retouch_giur_metrics) %>% 
+  mutate(blade_index = length / Width.at.50..max.dim ) %>% 
+  filter(blade_index >= 1.5) %>% 
+  select(giur_sections,  one_of(metric_variables)) %>% 
+  gather(variable, value, -giur_sections) %>% 
+  mutate(value = ifelse(variable == "mass", log(value), value)) %>% 
+  ggplot(.,
+       aes(giur_sections,
+           value)) +
+  geom_boxplot() +
+  geom_sina() +
+  facet_wrap( ~variable, scales = "free_y")
+  
+
+
 ```
 
 ```{r retouch_ii}
@@ -933,7 +995,7 @@ percentage_with_curv_greater_than_N <-
   round(mean(retouch_raw_material_metrics$curvature < N, na.rm = TRUE)  * 100, 0)
 
 # histogram
- hist(retouch_raw_material_metrics$curvature)
+# hist(retouch_raw_material_metrics$curvature)
  
 
 # Investigate curvature with other metric variables
@@ -988,17 +1050,41 @@ retouch_curvature_metrics %>%
 
 ```
 
+
+## Retouched pieces
+
+
+A total of `r nrow(retouch)` retouched pieces were found in the assemblage, accounting for `r retouch_as_proportion_of_all_artefacts`% of lithic assemblage. The average max dimension is `r average_max_dimension_of_retouch`mm. Compared with unretouched flakes, retouched pieces are generally larger according to the fact that retouched pieces are greater on length, max dimension, width and thickness. This indicates that after flake production, the knappers prefer to choose bigger flakes or flake fragments to retouch, especially, longer and thicker ones. In terms of raw materials, we compared all variables between stone artefacts made of chert and limestone, the difference between them are minor except the cortex percentage and platform thickness of limestone are larger than chert. % retouched pieces are made on flakes (%) and flake breaks (%), a small number of them are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Over % retouched pieces have more than 1 edge. The edge shapes of 1858 retouched edges were recorded from retouched pieces. The edge shapes include convex, concave, straight, denticulate, end, notch, borer. Among them, straight edge constitutes the largest proportion of the retouched edge (n=575 %) followed by convex(n=395) and concave(n=248)(significance of straight edge). 
+
+
 ```{r retouch_edge_angle}
-# Do levallois pieces have higher angles?
-edge_angle <- 
+# average edge angle
+edge_angle_long <- 
 edge_angle %>% 
   gather(variable, value, -number) %>% 
-  mutate(value = 2 * ( atan(0.5 * (value/3) ) ) / (pi/180))
+  rename(edge_angle_mm = value) %>% 
+  mutate(edge_angle_deg = 2 * (atan(0.5 * (edge_angle_mm/3) ) ) / (pi/180))
+
+edge_angle_long_mean <- 
+edge_angle_long %>% 
+  group_by(number) %>% 
+  summarise(mean_edge_angle_per_artefact = mean(edge_angle_deg, na.rm = TRUE ))
+
+# hist(edge_angle_long_mean$mean_edge_angle_per_artefact)
+
+mean_edge_angle_overall <- round(mean(edge_angle_long_mean$mean_edge_angle_per_artefact, na.rm = TRUE),0)
+
+# what percentage of artefacts pieces have an edge angle greater than N
+N <-  65
+percentage_with_edge_angle_greater_than_N <-
+  round(mean(edge_angle_long_mean$mean_edge_angle_per_artefact > N, na.rm = TRUE)  * 100, 0)
 
 edge_angle_metrics <- 
-edge_angle %>% 
+edge_angle_long %>% 
   mutate(number = paste0("f_", number)) %>% 
   left_join(retouch_curvature_metrics)
+
+# Do levallois pieces have higher angles? Eren says Yes, "These differences were evident both in terms of relatively higher (i.e., more obtuse) edge angles than debitage flakes and in being significantly less variable around their higher mean edge angles compared to debitage flakes."
 
 library(ggforce)
 edge_angle_metrics_lev <- 
@@ -1007,26 +1093,69 @@ edge_angle_metrics %>%
   mutate(type = ifelse(type %in% c("leva", "leva ","leva flake "), 
                        "leva", type))
 
+library(ggforce)
+edge_angle_metrics_lev_plot <- 
 ggplot(edge_angle_metrics_lev,
        aes(type,
-           value)) +
+           edge_angle_deg)) +
   geom_boxplot() +
   geom_sina(maxwidth = 1)
 
+# our levallois pieces are slightly higher... sig test?
+
 # sig diff between leval and non-L edge angles?
+edge_angle_metrics_lev_t_test <- 
   edge_angle_metrics_lev %>%
-  t.test(value ~ type, data = .)  %>% 
+  t.test(edge_angle_deg ~ type, data = .)  %>% 
   tidy()
+
+# not significant, not like Eren's assemblage 
   
 # check for variability of edge angles for L and non-L
 edge_angle_metrics_lev_var <- 
   edge_angle_metrics_lev %>% 
     group_by(number, type) %>% 
-    summarise(cv = raster::cv(value, na.rm = TRUE),
-              sd = sd(value, na.rm = TRUE)) %>% 
-    filter(!is.na(sd)) 
+    summarise(cv = raster::cv(edge_angle_deg, na.rm = TRUE),
+              sd = sd(edge_angle_deg, na.rm = TRUE)) %>% 
+    filter(!is.na(cv)) 
+
+# differences between each angle measurent across the artefact, or Eren's 'organised' vs 'disorganised'
+edge_angle_organisation <- 
+edge_angle %>% 
+   mutate(number = paste0("f_", number)) %>% 
+  left_join(retouch_curvature_metrics) %>% 
+    filter(type %in% c("leva", "leva ","leva flake ", "ret")) %>% 
+  mutate(type = ifelse(type %in% c("leva", "leva ","leva flake "), 
+                       "leva", type)) %>% 
+
+  mutate(s1_s2 = abs(section_1_angle - section_2_angle),
+         s2_s4 = abs(section_2_angle - section_4_angle),
+         s4_s6 = abs(section_4_angle - section_6_angle),
+         s6_s8 = abs(section_6_angle - section_8_angle),
+         s8_s7 = abs(section_8_angle - section_7_angle),
+         s7_s5 = abs(section_7_angle - section_5_angle),
+         s5_s3 = abs(section_5_angle - section_3_angle),
+         s3_s1 = abs(section_3_angle - section_1_angle)) %>% 
+  rowwise() %>% 
+  mutate(mean_diff_between_angles_on_the_artefact = mean(c(s1_s2,
+                                                           s2_s4,
+                                                           s4_s6,
+                                                           s6_s8,
+                                                           s8_s7,
+                                                           s7_s5,
+                                                           s5_s3,
+                                                           s3_s1),
+                                                           na.rm = TRUE)) 
+
+# is there a difference in organisation of edge angle between Levallois and non-L
+ggplot(edge_angle_organisation,
+       aes(type,
+           mean_diff_between_angles_on_the_artefact)) +
+  geom_boxplot() +
+  geom_sina()
 
 
+edge_angle_metrics_lev_var_plot <- 
 ggplot(edge_angle_metrics_lev_var,
        aes(type,
            cv)) +
@@ -1034,49 +1163,206 @@ ggplot(edge_angle_metrics_lev_var,
   geom_sina(maxwidth = 1)
 
   
-# ANOVA to test for statistical difference between edge angles and many variables
-anova_on_edge_angle_metrics_lev <- 
+# ANOVA to test for statistical difference between edge angles and artefact type
+anova_on_edge_angle_metrics_lev_aov <- 
 edge_angle_metrics_lev %>% 
-  select(value, type) %>% 
-  aov(value ~ type, data = .) %>% 
+  select(edge_angle_deg, type) %>% 
+  aov(edge_angle_deg ~ type, data = .) %>% 
   tidy()
 
+# cor test for relationship between edge angles and other numerics
+# extract p-values and find the variable with significant different
+edge_angle_metrics_lev_cor_test <- 
+edge_angle_metrics_lev %>% 
+  select(-number, -type, -type2, -site) %>% 
+  select_if(is.numeric) %>% 
+  gather(variable, value, -edge_angle_deg) %>% 
+  nest(-variable) %>% 
+  mutate(cor_test = map(data, ~cor.test_safe(.x$edge_angle_deg, 
+                                             .x$value, 
+                                             na.action = na.omit))) %>% 
+  mutate(cor_test_tidy = map(cor_test, 
+                             ~tidy(.x$result, 
+                                   data = .))) %>% 
+  unnest(cor_test_tidy) %>% 
+  filter( p.value < 0.05)
 
+edge_angle_metrics_lev_metric_cor <- 
+edge_angle_metrics_lev %>% 
+  select(-number, -type, -type2, -site) %>% 
+  select_if(is.numeric) %>% 
+  gather(variable, value, -edge_angle_deg) %>% 
+  ggplot(., 
+         aes(edge_angle_deg, 
+             value)) +
+  geom_point() +
+  facet_wrap( ~ variable, 
+              scales = "free_y")
+
+# edge angle by artefact type
+edge_angle_by_artefact_type <- 
+edge_angle_metrics_lev %>% 
+  filter(type2 %in% c("scp", "dent", "notch", "borer,scp")) %>% 
+ggplot(., 
+       aes(type2, 
+           edge_angle_deg)) + 
+  geom_boxplot()
+
+# ANOVA for edge angle by artefact type. 
+edge_angle_metrics_lev_aov <- 
+edge_angle_metrics_lev %>% 
+  filter(type2 %in% c("scp", "dent", "notch", "borer,scp")) %>% 
+  aov(edge_angle_deg ~ type2, data = .) %>% 
+  tidy()
+
+df <- paste0(edge_angle_metrics_lev_aov$df[1], ", ", edge_angle_metrics_lev_aov$df[2])
+```
+
+We calculated the edge angle by measuring the width at the 3 mm depth of the edge, following Eren and Lycett (2016). The average angle of each edge is `r mean_edge_angle_overall` degrees. Notably, there is a high proportion of the assemblage with relatively high edge angles, `percentage_with_edge_angle_greater_than_N`% of artefacts have average edge anlges greater than `r N`, which is not common in other sites (citation needed!). This feature can be explained as a result of the available raw material nodules which had a slab or tablet-like shape, leading to  steep edge angles in the flakes peices that are close to the edge angles on the unworked nodules. Edge angles are similar in mean and variation across the most abundant different types of retouched artefacts (F(`r df`) = `r round(edge_angle_metrics_lev_aov$statistic,2)[1]`, p = `r  round(edge_angle_metrics_lev_aov$p.value,2)[1]`). 
+
+
+```{r retouch_edge_shape}
+# edge shape, check to see that number of edge shapes matches 
+# count of edge shapes
+retouch$`edge shape` <- gsub(" ", "", retouch$`edge shape`) # 1101
+number_of_edge_shapes <- # 1101 items
+map(retouch$`edge shape`, ~unlist(strsplit(., ",|\\."))) %>% 
+  map_int(., length)
+
+edge_checking <- data_frame(count_of_edges = retouch$`number of edge`,
+           number_of_edge_shapes) # 1101 rows
+
+edge_checking$diff <- with(edge_checking, count_of_edges - number_of_edge_shapes) # 1101
+edge_checking$diffl <- ifelse(edge_checking$diff == 0, TRUE, FALSE) # 1101
+
+
+# only get the retouched artefacts where the count of edges matches the number of edge types
+retouch_edge_shapes <- retouch[ edge_checking$diffl, ] # 783 rows
+
+# retouch_edge_shapes$number <- gsub("f_", "", retouch_edge_shapes$number)
+retouch_edge_shapes_metrics <- 
+  left_join(retouch_edge_shapes, 
+            flakes_clean_names, 
+            by =  "number")
+retouch_edge_shapes_metrics <- data.frame(retouch_edge_shapes_metrics, check.names = TRUE)
+
+# plot distribution of edge numbers
+retouch_edge_numbers_histogram <- 
+ggplot(retouch_edge_shapes_metrics,
+       aes(number.of.edge)) +
+  geom_histogram()
+
+# tally of edge numbers
+retouch_edge_shapes_tally <- 
+  retouch_edge_shapes_metrics %>% 
+  group_by(number.of.edge) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n), 3) * 100)
+
+retouch_edge_shapes_metrics_tally_1_edge <- 
+retouch_edge_shapes_metrics_tally %>% 
+  filter(number.of.edge == 1) %>% 
+  pull(perc)
+
+# edge layers
+retouch_edge_layer_tally <- 
+  retouch %>% 
+  group_by(`number of layers`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n), 3) * 100)
+
+retouch_edge_layer_tally_1_layer <- 
+retouch_edge_layer_tally %>% 
+  filter(`number of layers` == 1) %>% 
+  pull(perc)
+           
+
+# for all artefacts with 1 retouched edge, what shape is that?
+retouch_edge_shapes_tally <- 
+retouch_edge_shapes %>% 
+  # filter(`number of edge` == 1) %>% 
+  group_by(`edge shape`) %>% 
+  tally() %>% 
+  arrange(desc(n)) 
+
+
+# investigate metrics by edge shape
+retouch_edge_shapes_metrics_by_edge <- 
+retouch_edge_shapes_metrics %>% 
+  group_by(edge.shape) %>%
+  mutate(count = n()) %>% # how many in each group?
+  summarise_if(is.numeric, mean, na.rm = TRUE) %>% 
+  arrange(desc(count))  # arrange from biggest group to smallest
+
+# just look at the first five rows, and basic metrics
+
+retouch_edge_shapes_basic_metrics_by_edge <- 
+retouch_edge_shapes_metrics_by_edge[1:5, ]  %>% 
+  select(one_of(c("edge.shape", basic_metrics)))
+
+# Plot these
+library(tidyr)
+plot_retouch_edge_type_basic_metrics <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", basic_metrics))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  ggplot(aes(edge.shape,
+             value)) +
+    geom_boxplot() +
+  facet_wrap( ~ variable, scales = "free_y")
+
+
+# seems that it's not highly patterned, but maybe mass is worth a closer look
+plot_retouch_edge_type_mass <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", "mass"))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  ggplot(aes(edge.shape,
+             value)) +
+    geom_boxplot()  +
+  scale_y_log10()
+# not a lot of difference 
+
+# ANOVA to test for statistical difference
+anova_on_edge_shape_and_metrics <- 
+retouch_edge_shapes_metrics %>% 
+  filter(edge.shape %in% retouch_edge_shapes_tally$`edge shape`[1:5]) %>% 
+  select(one_of(c("edge.shape", basic_metrics))) %>% 
+  gather(variable, value, -edge.shape) %>% 
+  nest(-variable) %>% 
+  mutate(anova = map(data, ~aov(value ~ edge.shape, data = .)))
 
 # extract p-values and find the variable with significant different
-anova_on_type2_and_metrics_pvalues <- 
-anova_on_type2_and_metrics %>%
+anova_on_edge_shape_and_metrics_pvalues <- 
+anova_on_edge_shape_and_metrics %>%
   mutate(model = map(anova, ~tidy(.x, data = .))) %>% 
   unnest(model) %>% 
   filter(term != "Residuals") %>% 
   filter( p.value <= 0.05)
 
-anova_on_typ2_and_metrics_tukeyhsd <- 
-anova_on_type2_and_metrics %>% 
-  filter(variable %in% anova_on_type2_and_metrics_pvalues$variable) %>% 
+anova_on_edge_shape_and_metrics_tukeyhsd <- 
+anova_on_edge_shape_and_metrics %>% 
+  filter(variable %in% anova_on_edge_shape_and_metrics_pvalues$variable) %>% 
   mutate(tukeyhsd = map(anova, 
                         ~tidy(TukeyHSD(.x, 
                                        data = ., 
                                        ordered = TRUE)))) %>% 
   unnest(tukeyhsd)  %>% 
-  filter(adj.p.value <= 0.05)  
-
-
-
-# do they have less variability?
+  filter(adj.p.value <= 0.05)
 ```
 
-
-## Retouched pieces
-
-
-A total of `r nrow(retouch)` retouched pieces were found in the assemblage, accounting for `r retouch_as_proportion_of_all_artefacts`% of lithic assemblage. The average max dimension is `r average_max_dimension_of_retouch`mm. Compared with unretouched flakes, retouched pieces are generally larger according to the fact that retouched pieces are greater on length, max dimension, width and thickness. This indicates that after flake production, the knappers prefer to choose bigger flakes or flake fragments to retouch, especially, longer and thicker ones. In terms of raw materials, we compared all variables between stone artefacts made of chert and limestone, the difference between them are minor except the cortext percentage and platform thickness of limestone are larger than chert. % retouched pieces are made on flakes (%) and flake breaks (%), a small number of them are made on either chunks or pebbles. Side scrapers dominate the sub-division of retouched pieces (%), followed by denticulates and borers. Over % retouched pieces have more than 1 edge. The edge shapes of 1858 retouched edges were recorded from retouched pieces. The edge shapes include convex, concave, straight, denticulate, end, notch, borer. Among them, straight edge constitutes the largest proportion of the retouched edge (n=575 %) followed by convex(n=395) and concave(n=248)(significance of straight edge).We calculated the edge angle by measuring the width at the 3 mm depth of the edge. The average angle of each edge is?. Notably, there is amount of the edge angles are extreme steep which is not common in other site. This feature can be explained in two ways: 1) the lack of good quality raw materials leaded tool makers to elongate the lives of tools as long as possible, therefore, the edges had been retouched multiple times  after using; 2) they intended to produce the steep edge in order to apply to a special tusk.  Fig? and Fig? show the edge number distribution and edge shapes of each piece. The result shows that the majority of tools are not only retouched one edge, instead, they retouched several edges on one single piece. It also suggest the high efficient of exploit. Most of the layers of retouch is 1(n=760) and 2 (n=322).  Looking at the location of retouch and the size of the retouched flakes can provide us further insight into retouching behaviours. Most of tools have more than one retouched edges.
-
-We introduced two concepts “Zone Index” and “Geometric Index of Unifacial Reduction(GIUR)” to estimate the invasion and intensity of retouching. In this assemblage, if a flake is retouched, the retouch tends to be extensive. This is suggested by the GIUR values. We found that `r percentage_with_giur_greater_than_N`% of retouched artefacts have a GIUR greater than `r N`. However, there is no obvious correlations between GIUR values and other variables such like length, width and thickness.  From our observation… We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer geometric side of the piece.  Except retouching with hard hammer percussing, pressing is also likely utilized demonstrated by flat and enlonged retouching scars. One remarkable feature of the retouching is demonstrated by a strong moustrian style with regular and continues retouching scars producing even edges on a large number of tools.
+The majority of tools (`r retouch_edge_shapes_metrics_tally_1_edge`%) are retouched on only one edge of the artefact, and have only one layer of retouch on the worked edges (`r `number of layers`%).
 
 ### Indices
 
+We use two methods to summarise the invasiveness and intensity of retouching: Kuhn's (1990) 'Geometric Index of Unifacial Reduction (GIUR)', and Clarkson's (2002) 'Index of Invasiveness'. In this assemblage, if a flake is retouched, the retouch tends to be extensive. This is suggested by the relatively highg GIUR values. We found that `r percentage_with_giur_greater_than_N`% of retouched artefacts have a GIUR greater than `r N`. However, there are no strong correlations between GIUR values and other variables such as length, width and thickness, suggesting that retouch intensity is largely independant of other technological attriutes. From our observations... 
+
+We also measured the angle of each retouched edge. For notch pieces(n=91), we found that most notches only have one notch end on each retouched piece and the average depth and length is xx and xx. The location of retouching is mainly on one side which defined as longer geometric side of the piece.  Except retouching with hard hammer percussing, pressing is also likely utilized demonstrated by flat and enlonged retouching scars. One remarkable feature of the retouching is demonstrated by a strong moustrian style with regular and continues retouching scars producing even edges on a large number of tools
+
 ## Levallois 
+
 We distinguished 70 stone artifacts that are Levallois like products including 11 cores, 22 flakes, 4 points and 33 tools made on levallois flakes. The average dimension of levallois products is xxx which is smaller (or larger) than ordinary products. The platform shapes of levallois flakes are various ranging from triangle, quadrangle, fusiformis to chapeau de gendarme(CDG). For flakes, we measured the thickness at 25%, 50%, 70% max dimension and compared them with ordinary flakes found that levallois flakes are relatively more flat. This found is consistent with the theory that ... The scar number is also relatively more than ordinary flakes, the direction of which is mostly centripetal. The platform of Levallois flakes and flake fragments are mainly plain(n=22), followed by facet(n=12) and the platform shapes are mainly CDG(n=15), followed by triangle(n=8) and quadrangle(n=6). The dorsal scar patterns can be divided into two main types: centripetal pattern which is covered by flake scars that are distributed centripetally and big scar pattern which is characterized by a giant scar from the same direction covering the most part of the dorsal area with proximal parts of centripetal scars on the margin(Fig?). Generally, the later pattern ends up with a relative flatter body and more possibilities of CDG platform shape. The configuration of levallois cores volumes were maintained through the detachment of predetermining Levallois and trimming striking platform flakes. The average max dimension is 82mm. Most of their platforms are facet(n=5). These cores are classified as Levallois is accorded to several key technical criteria (Boeda,1994) : 1) the flaking surface is maintained through predetermined flake scars that is arranged centripetally; 2) the fracture plane of detachment are almost parallel to the plane of intersection of the upper and lower surface; 3) and the two surface are hierarchicaly related. More than half of these cores retain a portion of cortex on the surface. The average scar number of each core is 4.5, and the average length of these scars is 40mm. 12 discoid cores are also found in the assemblage which are separated with Levallois cores. Although most of discoid cores also share similar features with Levallois, based on the 5 criteria definited by Boeda, it is more reasonable to classify them to discoid. 
 
 # Discussion
