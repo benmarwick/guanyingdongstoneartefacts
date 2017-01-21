@@ -571,8 +571,19 @@ cores_cortex_less_than_N <-
   pull(perc) %>% 
   sum()
   
+# the cortex location of cores
+core_cortex_location_percentage <-
+  cores %>% 
+  mutate(cores_cortex_location = ifelse(`cortex location` %in% c("prox", "up"), "platform", 
+        ifelse(`cortex location` == "distal", "bottom","cortex location"))) %>% 
+  group_by(cores_cortex_location) %>% 
+tally() %>% 
+mutate(perc = round(n / sum(n) * 100, 1))
 
-
+platform_cortex_core <-
+  core_cortex_location_percentage %>% 
+  filter(cores_cortex_location == "platform") %>% 
+  pull(perc)
 
 
 ```
