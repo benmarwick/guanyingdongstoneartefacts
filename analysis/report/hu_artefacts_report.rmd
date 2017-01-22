@@ -434,12 +434,19 @@ flakes %>%
          idx_of_elon) %>% 
   filter(complete.cases(.))
 
+# Trying Scerri's Fig 11...
+library(cluster)
+daisy_mat <- as.matrix(daisy(flakes_dissim, metric="gower"))
+
 # how many clusters are in there?
 library(NbClust)
 nb <- NbClust(flakes_dissim, 
         min.nc=2, max.nc=15, method = "kmeans", 
         index = "alllong", alphaBeale = 0.1)
 hist(nb$Best.nc[1,], breaks = max(na.omit(nb$Best.nc[1,]))) #  3
+# what are the distinctive attributes of these clusters?
+
+
 ```
 
 
