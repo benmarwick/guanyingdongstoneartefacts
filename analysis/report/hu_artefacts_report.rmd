@@ -434,9 +434,19 @@ flakes %>%
          idx_of_elon) %>% 
   filter(complete.cases(.))
 
-# Trying Scerri's Fig 11...
+# Trying Scerri's Fig 11... according to her email reply
 library(cluster)
 daisy_mat <- as.matrix(daisy(flakes_dissim, metric="gower"))
+daisy_mat_mds <- as_data_frame(cmdscale(daisy_mat)) # generates MDS of the dissimilarity matrix
+
+# plot the dissimilarity, with some metric variables to show their effect
+daisy_mat_mds
+ggplot(daisy_mat_mds,
+       aes(V1,
+           V2)) +
+  geom_point(aes(size = flakes_dissim$mass,
+                 colour = flakes_dissim$idx_of_elon))
+# important:  `platform width`, `platform thickness`, `Thickness at 75% max dim`, idx_of_flat, idx_of_elon
 
 # how many clusters are in there?
 library(NbClust)
