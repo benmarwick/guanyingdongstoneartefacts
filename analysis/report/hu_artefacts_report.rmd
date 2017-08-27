@@ -11,7 +11,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE,
-                      message = FALSE)
+                      message = FALSE,
+                      eval = FALSE)
 
 ```
 
@@ -201,7 +202,7 @@ Prolem: East Asia, why people thought no levollois. Why studying this site is im
 
 ## Raw materials
 
-```{r rawmaterials}
+```{r eval = TRUE, rawmaterials}
 flake_raw_material <- table(flakes$material)
 
 #' Data frame of counts, frequences and proportion of values in a vector
@@ -251,6 +252,39 @@ Chert
 limestone					
 
 The raw material source are mostly from local area that no further than 10km based on Leng and Li's investigation indicating the ability of local raw material guides the selectivity of kanppers . One possible chert source, located about 4 km (straight distence) is called Jinyan hill, where chert nodules are exposed on surface (Leng, 2001).For limestone and volcanic rocks like basalt and quartz are all from local mountain, river bed and exposed layers. The majority of raw material are accessable within 6 km (Li, 2009) suggesting  an relative small foraging territory. Leng also found that the natural chert, volcanic rock, and siliceous limestone nodules were generally larger than specimen from GYD. According to source investigation, ancient knappers were inclined to obtain raw material locally and traverl short distence to get access to raw material, besides, they were aware of raw material selection indicated by the preference of chert, which is easier control and has better flaking property as main knapping object. It also suggests that their foraging radius allows them to collect raw material and return to cave without overnight stop. 
+
+## Taphonomy 
+
+```{r eval = TRUE, taphonomy}
+# how many flakes are broken?
+flakes_broken <- 
+flakes %>% 
+  mutate(broken = if_else(grepl("brk|break|proximal", type), "broken", "not broken")) %>% 
+  group_by(broken) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 0))
+
+# how much heat treatment?
+flakes_heated <- 
+flakes %>% 
+  mutate(heated = if_else(grepl("heat", 
+                                `heat treatment/damage`), "heated", "not heated")) %>% 
+  group_by(heated) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 0))
+
+# how are the surface textures?
+flakes_surf <- 
+flakes %>% 
+  group_by(`cortex texture`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 0))
+
+         
+         
+```
+
+Among the flakes in the assemblage, `r flakes_broken$perc[1]`% (n = `r flakes_broken$perc[2]`) are broken. Two processes are likely responsible for this high percentage: manufacturing failures during the knapping activity, and energetic taphonomic processes that have damages the artefacts after discard. The generally homogenous nature of the stone indicates that failures during knapping should be expected at a low frequency, assuming a compentent knapper. Thus, many of the breakages many be attributed to post-depositional processes such as ground surface breakage due to trampling. With just `r flakes_heated$n[1]` artefacts showing signs of heat treatment, we conclude that artefact damage due to excess heating occured at a negligible rate at GYD. 
  
 ## Flakes
 
@@ -334,7 +368,7 @@ library(purrr)
 scar_direction <- as_data_frame(map_if(scar_direction, is.character, as.numeric))
 flakes_same_scar_direction <- 
 scar_direction %>% 
-  filter(`scar1 direction ` == 1 | # if this col == 1 or the next col, or the next 
+  filter(`scar1 direction` == 1 | # if this col == 1 or the next col, or the next 
          `scar2 direction` == 1 |  # | is the symbol for 'or'
          `scar3 direction` == 1 |
          `scar4 direction` == 1 |
@@ -342,7 +376,7 @@ scar_direction %>%
          `scar6 direction` == 1 |
          `scar7 direction` == 1 |
          `scar8 direction` == 1 |
-         `scar9 direction ` == 1 |
+         `scar9 direction` == 1 |
          `scar10 direction` == 1) %>% 
   nrow()
 
@@ -412,7 +446,7 @@ average_platform_width <- round(mean(flakes$`platform width`, na.rm = TRUE),2)
 ```
 
 
-We found `r nrow(flakes)` flake pieces including complete flake (`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %%) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is `r average_platform_thickness`mm; the average width of platform is `r average_platform_width`mm.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular. 
+We found `r nrow(flakes)` flake pieces including complete flake (`r n_complete_flakes`), retouched flake(`r n_complete_flakes`),  flake breaks(`r n_complete_flakes`),  and retouched flake breaks(`r n_complete_flakes`),. The average maximum length of the flakes pieces is `r flake_length_mean` mm, the average thickness is`r flake_thick_mean` mm. These figures suggest that the flake from GYD are thin, indicating  the ability of knapping control.  There are `r sum(flakes_platforms$n)` flakes or broken flake that have distinguishable platforms, that  can be divided into cortex (`r cortex_plat_perc` %), plain (`r plain_plat_perc` %), facet (`r facet_plat_perc`%), dihederal (`r dihederal_plat_perc` %) and focus. One noticeable character of the flake assemblage is the relative higher prepared platform compared with other sites in China during Middle Palaeolithic. It indicates a high exploitation capacity of raw material, probably due either to technological capacity or raw material’s flaking property.  The average thickness of platform is `r average_platform_thickness`mm; the average width of platform is `r average_platform_width`mm.  The shapes of platform include triangle (`r triangle_platshp_perc` %), fusiform (`r fusiform_platshp_perc`%), quadrangle (`r quadrangle_platshp_perc`%) and CDG (`r CDG_platshp_perc`%) and with a small account of trapezoid ，rectangle and irregular. 
 
 In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scars are the largest proportion.`r round(flakes_with_4_or_less_scars,0)`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Figure \@ref(fig:thicknessplot) shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
 
@@ -761,7 +795,7 @@ retouch_raw_material_metrics_long %>%
 
 retouch_raw_material_metrics_plot <- 
 retouch_raw_material_metrics %>% 
-  select(material,  one_of(metric_variables)) %>% 
+  select(material,  length, one_of(metric_variables)) %>% 
   select(material, length, Width.at.50..max.dim, Thickness.at.50..max.dim) %>%
   ggpairs(aes(colour = material))
 

@@ -1,0 +1,288 @@
+---
+title: "Guanyingdong Stone Artefact Assemblage Report: Taphonomy"
+author: "HY and BM"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+   bookdown::word_document2:
+    fig_caption: yes
+    reference_docx: templates/template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE,
+                      eval = FALSE)
+
+```
+
+```{r eval=TRUE, echo=FALSE}
+# read in the data
+library(plyr)
+library(dplyr)
+library(knitr)
+library(readxl)
+library(ggplot2)
+library(tidyr)
+library(purrr)
+library(GGally)
+library(ggforce)
+# set working direcoty to source
+file_name <- "../data/artefacts_new_name.xls" 
+quiet_read <- purrr::quietly(readxl::read_excel)
+flakes <- quiet_read(file_name, sheet = "flake basics")$result
+cores <- quiet_read(file_name, sheet = "core basics")$result
+debris <- quiet_read(file_name, sheet = "chunk&debris")$result
+retouch <- quiet_read(file_name, sheet = "retouch")$result
+scar_direction <- quiet_read(file_name, sheet = "scar direction ")$result
+edge_angle <- quiet_read(file_name, sheet = "edge angle")$result
+core_scars_length <- quiet_read(file_name, sheet = "core flake scars")$result
+names(core_scars_length) <- make.names(names(core_scars_length))
+# handy function for getting a single value from a tibble
+pull <- function(x,y) {
+  x[,if(is.name(substitute(y))) deparse(substitute(y)) else y, drop = FALSE][[1]]
+}
+```
+
+```{r eval=TRUE, echo=FALSE}
+# are the artefact numbers really unique?
+# sum(duplicated(flakes$number))
+
+# change the name of flakes by adding "f_"
+flakes$number <- paste0( "f_", flakes$number)
+
+# extract duplicated flakes 
+flakes_duplicated <- flakes[ duplicated(flakes$number), ]
+
+# remove from original data
+flakes <- flakes[!duplicated(flakes$number), ]
+
+# update the artefact ID so it's not duplicate
+flakes_duplicated$number <- paste0(flakes_duplicated$number, "a")
+
+# put back into original data 
+flakes <- rbind(flakes, flakes_duplicated)
+
+flakes$initiation <- ifelse(flakes$initiation %in% c("hert", "h"), "hertzian",
+                            ifelse(flakes$initiation == "bend", "bending",
+                                   ifelse(flakes$initiation %in% c("wedging", "wed"), "wedge",
+                                          ifelse(flakes$initiation %in% c("miss", "mis"),
+                                                 "missing", flakes$initiation))))
+
+
+flakes$platform <- ifelse(flakes$platform == "plane", "plain",
+                          ifelse(flakes$platform %in% c("miss", "mis", "42.000000", "0.000000", "overh"), "missing",
+                                 ifelse(flakes$platform == "facted", "faceted",flakes$platform)))
+
+flakes$termination <- ifelse(flakes$termination == "f", "feather",
+                             ifelse(flakes$termination == "br", "break",
+                                    ifelse(flakes$termination %in% c("brpt", "brput"), "abrupt",
+                                           ifelse(flakes$termination == "plung", "plunge",
+                                                  ifelse(flakes$termination == "st", "step",
+                                                         ifelse(flakes$termination %in% c("m", "miss", "na", "over"), "missing",flakes$termination))))))
+
+
+flakes$`Width at 25% max dim` <- ifelse(flakes$`Width at 25% max dim` == 332.7, 33.2,
+                                        ifelse(flakes$`Width at 25% max dim` == 668, 66.8,flakes$`Width at 25% max dim`))
+
+# do the same for the retouch...
+
+# are the artefact numbers really unique?
+#sum(duplicated(retouch$number))
+
+retouch$number <- paste0( "f_", retouch$number)
+
+# extract duplicated retouch 
+retouch_duplicated <- retouch[ duplicated(retouch$number), ]
+
+# remove from original data
+retouch <- retouch[!duplicated(retouch$number), ]
+
+# update the artefact ID so it's not duplicate
+retouch_duplicated$number <- paste0(retouch_duplicated$number, "a")
+
+# put back into original data 
+retouch <- rbind(retouch, retouch_duplicated)
+
+
+# do the same for the debris...
+
+# are the artefact numbers really unique?
+# sum(duplicated(debris$number))
+
+debris$number <- paste0( "d_", debris$number)
+
+# extract duplicated retouch 
+debris_duplicated <- debris[ duplicated(debris$number), ]
+
+# remove from original data
+debris <- debris[!duplicated(debris$number), ]
+
+# update the artefact ID so it's not duplicate
+debris_duplicated$number <- paste0(debris_duplicated$number, "a")
+
+# put back into original data 
+debris <- rbind(debris, debris_duplicated)
+
+
+# do the same for the core...
+
+# are the artefact numbers really unique?
+# sum(duplicated(cores$number))
+
+cores$number <- paste0( "c_", cores$number)
+
+# extract duplicated retouch 
+cores_duplicated <- cores[ duplicated(cores$number), ]
+
+# remove from original data
+cores <- cores[!duplicated(cores$number), ]
+
+# update the artefact ID so it's not duplicate
+# cores_duplicated$number <- paste0(cores_duplicated$number, "a")
+
+# put back into original data 
+cores <- rbind(cores, cores_duplicated)
+
+
+
+############
+# basic details of the dataset
+artefact_ids <- list(flake_ids = flakes$number,
+                     core_ids = cores$number,
+                     debris_ids = debris$number,
+                     retouch_ids = retouch$number)
+
+
+
+# how many unique artefacts?
+totals_of_each_type <- lapply(artefact_ids, function(i) length(unique(i)))
+
+#count_unique_artefacts <- sum(unlist(totals_of_each_type))
+
+count_unique_artefacts <- length(unique(unlist(artefact_ids[1:3])))
+
+# debris pieces that are  retouch pieces
+### debris_with_retouch <- intersect(artefact_ids$retouch_ids, artefact_ids$debris_ids)
+
+### proportion_debris_retouched <- length(debris_with_retouch) / count_unique_artefacts 
+
+# flakes that are retouched pieces
+flake_with_retouch <- intersect(artefact_ids$retouch_ids, artefact_ids$flake_ids)
+
+proportion_flake_retouched <- length(flake_with_retouch) / count_unique_artefacts 
+
+
+# proportion of each type
+type_table <- data.frame(type = names(as.data.frame(totals_of_each_type)),
+                         count = as.numeric(as.data.frame(totals_of_each_type)),
+                         proportion = round(as.numeric(as.data.frame(totals_of_each_type)/count_unique_artefacts),3))
+
+# add total row at the bottom
+type_table$type <- as.character(type_table$type)
+
+type_table <- rbind(type_table, c("total", count_unique_artefacts, round(sum(type_table$proportion),2)))
+# total number of artefacts
+total_number_of_artefacts <- as.numeric(type_table$count[type_table$type == "total"])
+
+# print pretty table                         
+# kable(type_table)
+```
+
+
+# Introduction 
+
+The Guanyindong site, located in  Guanyindong village, Qianxi County of Guizhou Province (26°51′26″N, 105°58′7″E) at an elevation of 1464 m a.s.l., is a limestone cave site extending from east to west it was discovered by a team organized by the institute of Vertebrate Paleontology and Paleoanthropolgy (IVPP), Chinese Academy of Sciences in 1964. Several excavations were conducted in 1965, 1972 and 1973, yeilding   A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` pieces of debris were identified. 
+
+Introduction of paleolithc research in south Asia (or China). 
+
+Introduction the distribution of levollois technique (origin, dispersion, distribution). 
+
+Prolem: East Asia, why people thought no levollois. Why studying this site is important. Aim in this study.
+
+## Raw materials
+
+```{r eval = TRUE, rawmaterials}
+flake_raw_material <- table(flakes$material)
+
+#' Data frame of counts, frequences and proportion of values in a vector
+#' 
+#' @param x a vector
+
+tbl_of_counts_and_props <- function(x){
+  tbl <- table(x)
+  res <- data.frame(tbl, 
+                    round(prop.table(tbl) * 100, 2))
+  colnames(res) <- c('Name', 'Count', 'Percentage', 'Proportion')
+  res
+}
+
+raw_material_tbl <- tbl_of_counts_and_props(flakes$material)
+
+# raw materials of retouch pieces
+retouch_flake_details <- 
+flakes %>% 
+left_join(retouch) %>% 
+filter(!is.na(`number of layers`))
+# how many chert flakes?
+
+chert_flake<- sum(grepl("chert", flakes$material))
+
+
+chert_ret<- flakes %>% 
+  filter(grepl("chert", material)) %>%
+  filter(grepl("ret", type)) %>% 
+  nrow()
+percentage_of_chert_tools <-round(chert_ret/chert_flake * 100, 2)
+
+# how many retouched pieces were limestone
+
+limestone_ret<- flakes %>% 
+  filter(grepl("limestone", material)) %>%
+  filter(grepl("ret", type)) %>% 
+  nrow()
+
+```
+
+Previous research reported that the stone artefacts are preliminarily made of siliceous limestone, In my observation,the majority of siliceous limestone is classified as chert, therefore, the assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) followed by limestone (`r raw_material_tbl$Proportion[3]`%) and  basalt, sandstone and quartz  were only occasionally used and constitute % and % of the assemblage respectively. Although the chert selected varies slightly from color to texture, sub-classification is not conducted due to the consistence of their physical properties which are homogeneous without fracture, joint and constant hardness. Table? Shows the different types of stone artefact that chert and limestone were employed.  `r percentage_of_chert_tools` % chert flakes were retouched into stone tools indicating a high efficient exploit of this raw material, although it can be easily obtained nearby. In terms of retouched pieces, `r chert_ret` of them are made of chert, `r limestone_ret` of them are made from limestone. It is obvious that  hominins  intended to selected chert as optimal raw material to manufacture  stone tools. 
+
+
+	flakes	Retouched flakes	cores	debris	total
+Chert					
+limestone					
+
+The raw material source are mostly from local area that no further than 10km based on Leng and Li's investigation indicating the ability of local raw material guides the selectivity of kanppers . One possible chert source, located about 4 km (straight distence) is called Jinyan hill, where chert nodules are exposed on surface (Leng, 2001).For limestone and volcanic rocks like basalt and quartz are all from local mountain, river bed and exposed layers. The majority of raw material are accessable within 6 km (Li, 2009) suggesting  an relative small foraging territory. Leng also found that the natural chert, volcanic rock, and siliceous limestone nodules were generally larger than specimen from GYD. According to source investigation, ancient knappers were inclined to obtain raw material locally and traverl short distence to get access to raw material, besides, they were aware of raw material selection indicated by the preference of chert, which is easier control and has better flaking property as main knapping object. It also suggests that their foraging radius allows them to collect raw material and return to cave without overnight stop. 
+
+## Taphonomy 
+
+```{r eval = TRUE, taphonomy}
+# how many flakes are broken?
+flakes_broken <- 
+flakes %>% 
+  mutate(broken = if_else(grepl("brk|break|proximal", type), "broken", "not broken")) %>% 
+  group_by(broken) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 0))
+
+# how much heat treatment?
+flakes_heated <- 
+flakes %>% 
+  mutate(heated = if_else(grepl("heat", 
+                                `heat treatment/damage`), "heated", "not heated")) %>% 
+  group_by(heated) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 0))
+
+# how are the surface textures?
+flakes_surf <- 
+flakes %>% 
+  group_by(`cortex texture`) %>% 
+  tally() %>% 
+  mutate(perc = round(n / sum(n) * 100, 0))
+
+         
+         
+```
+
+Among the flakes in the assemblage, `r flakes_broken$perc[1]`% (n = `r flakes_broken$perc[2]`) are broken. Two processes are likely responsible for this high percentage: manufacturing failures during the knapping activity, and energetic taphonomic processes that have damages the artefacts after discard. The generally homogenous nature of the stone indicates that failures during knapping should be expected at a low frequency, assuming a competent knapper. Thus, many of the breakages may be attributed to post-depositional processes such as ground surface breakage due to trampling. With just `r flakes_heated$n[1]` artefacts showing signs of heat treatment, we conclude that artefact damage due to excess heating occured at a negligible rate at GYD. The surface texture of the artefacts is generally fresh, indicating limited weathering from to exposure to pedogenic processes. This is probably a result of the cool, dry environment within the rockshelter.  
+ 
