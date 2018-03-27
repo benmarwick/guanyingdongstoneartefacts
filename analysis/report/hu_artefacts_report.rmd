@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 ```
 
-```{r eval=TRUE, echo=FALSE}
+```{r read-in-the-data, eval=TRUE, echo=FALSE}
 # read in the data
 library(plyr)
 library(dplyr)
@@ -41,7 +41,7 @@ core_scars_length <- quiet_read(file_name, sheet = "core flake scars")$result
 names(core_scars_length) <- make.names(names(core_scars_length))
 ```
 
-```{r eval=TRUE, echo=FALSE}
+```{r deal-with-duplicates, eval=TRUE, echo=FALSE}
 # are the artefact numbers really unique?
 # sum(duplicated(flakes$number))
 
@@ -194,7 +194,7 @@ The Guanyindong site, located in  Guanyindong village, Qianxi County of Guizhou 
 
 ## Raw materials
 
-```{r eval = TRUE, rawmaterials}
+```{r raw-materials, eval = TRUE, rawmaterials}
 flake_raw_material <- table(flakes$material)
 
 #' Data frame of counts, frequences and proportion of values in a vector
@@ -248,7 +248,7 @@ The raw material source are mostly from local area that no further than 10km bas
 
 ## Taphonomy 
 
-```{r eval = TRUE, taphonomy}
+```{r taphnomy, eval = TRUE, taphonomy}
 # how many flakes are broken?
 flakes_broken <- 
 flakes %>% 

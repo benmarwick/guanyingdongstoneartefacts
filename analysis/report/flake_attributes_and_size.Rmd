@@ -8,11 +8,141 @@ output:
     reference_docx: templates/template.docx
 ---
 
-```{r setup, include=FALSE}
+```{r setup-flake-size, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 THe reviewers ask:
 
 >  can they offer other data that might elucidate changes in flaking type with reduction, e.g. changes in flake attributes that correlate with size declines?
+
+
+Read in the data, deal with dupicates, get the basic flake details...
+
+Let's see if there are any natural groupings in flake mass:
+
+```{r}
+hist(flakes$mass)
+hist(log(flakes$mass))
+```
+
+Nothing obvious, let's try a little clustering. We will try univariate clustering:
+
+```{r}
+require(Ckmeans.1d.dp)
+result <- Ckmeans.1d.dp(flakes$mass[!is.na(flakes$mass)])
+plot(result)
+
+n_clusters <- length(result$size)
+n_clusters_30 <- length(result$size[result$size > 30])
+
+# assign cluster ID to table
+flakes_clustered <- 
+flakes %>% 
+  filter(!is.na(mass)) %>% 
+  mutate(cluster = result$cluster) %>% 
+  right_join(flakes) %>% 
+  filter(cluster %in% 1:n_clusters_30)
+```
+
+We get `r n_clusters` clusters, with `r n_clusters_30` that have more than 30 artefacts in them
+
+```{r}
+ggplot(flakes_clustered,
+       aes(mass, 
+          length,
+          colour = factor(cluster)))+
+  geom_point()
+```
+
+Now let's see how some of the key variables change accross these size clusters:
+
+```{r}
+flakes_clustered %>% 
+  select_if(is.numeric) %>% 
+  select(-he) %>% 
+  gather(variable, value, -cluster) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(cluster = factor(cluster)) %>% 
+  ggplot(aes(cluster,
+             value)) +
+  geom_boxplot() +
+  facet_wrap( ~ variable, scales = "free_y") +
+  theme_minimal()
+```
+
+We see that some dimensions don't increase with size. Platform thickness decreases a little, as mass goes up, platform width becomes more variable. Scar numbers have less high outliers as size increases. 
+
+What if we just look at flakes with very little cortex, and thus exclude the primary reduction flakes:
+
+```{r}
+flakes_clustered %>% 
+  select_if(is.numeric) %>% 
+  select(-he) %>% 
+  filter(`cortex percentage` < 20) %>% 
+  gather(variable, value, -cluster) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(cluster = factor(cluster)) %>% 
+  ggplot(aes(cluster,
+             value)) +
+  geom_boxplot() +
+  facet_wrap( ~ variable, scales = "free_y") +
+  theme_minimal()
+```
+
+Platform thickness decreases, width at 50% and 75% does not increase as much as width at 25% suggesting a slight increase in triangular-shaped flakes over parallel-sided flakes as the flakes get larger. 
+
+How about the categorical variables?
+
+```{r}
+
+flakes_categorical <- 
+flakes_clustered %>% 
+  select_if(function(col) is.character(col) | 
+                                   all(col == .$cluster)) %>% 
+  select(-site,  -layer, -number,  -dai, -yuanfenlei,
+         -comment, -X__1) %>% 
+  gather(variable, value, -cluster) %>% 
+  mutate(cluster = factor(cluster)) %>% 
+  filter(!is.na(value)) %>% 
+  group_by(cluster, variable, value) %>% 
+  tally() %>% 
+  ungroup() %>% 
+  group_by(cluster, variable) %>%  
+  mutate(prop = n / sum(n) * 100) 
+
+
+  # ggplot(flakes_categorical,
+  #        aes(cluster,
+  #            prop,
+  #            fill = value)) +
+  # geom_col() +
+  # facet_wrap( ~ variable, scales = "free") +
+  # theme_minimal()
+```
+
+Try for a nice plot
+
+```{r}
+library(gridExtra)
+out <- by(data = flakes_categorical, 
+          INDICES = flakes_categorical$variable, 
+          FUN = function(m) {
+      m <- droplevels(m)
+      m <- ggplot(m, aes(cluster, 
+                         prop, 
+                         group=1, 
+                         fill = value)) + 
+         geom_col() +
+        theme(legend.key.size = unit(1,"line")),
+              legend.keywidth = unit(1,"line")),
+              legend.key.width = unit(1,"line")))
+   })
+do.call(grid.arrange, out)
+
+# If you want to supply the parameters to grid.arrange
+do.call(grid.arrange, c(out, ncol=3))
+```
+
+
 
