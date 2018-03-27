@@ -1,0 +1,18 @@
+---
+title: "Guanyingdong Stone Artefact Assemblage Report: Variation by Size"
+author: "HY and BM"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+   bookdown::word_document2:
+    fig_caption: yes
+    reference_docx: templates/template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+THe reviewers ask:
+
+>  can they offer other data that might elucidate changes in flaking type with reduction, e.g. changes in flake attributes that correlate with size declines?
+
