@@ -27,8 +27,9 @@ library(tidyr)
 library(purrr)
 library(GGally)
 library(ggforce)
-# set working direcoty to source
-file_name <- "../data/artefacts_new_name.xls" 
+# set working directory to source
+# original filename: artefacts (自动保存的).xls 
+file_name <- here::here("analysis/data/data_raw/artefacts (xxx).xls") 
 quiet_read <- purrr::quietly(readxl::read_excel)
 flakes <- quiet_read(file_name, sheet = "flake basics")$result
 cores <- quiet_read(file_name, sheet = "core basics")$result
@@ -38,10 +39,6 @@ scar_direction <- quiet_read(file_name, sheet = "scar direction ")$result
 edge_angle <- quiet_read(file_name, sheet = "edge angle")$result
 core_scars_length <- quiet_read(file_name, sheet = "core flake scars")$result
 names(core_scars_length) <- make.names(names(core_scars_length))
-# handy function for getting a single value from a tibble
-pull <- function(x,y) {
-  x[,if(is.name(substitute(y))) deparse(substitute(y)) else y, drop = FALSE][[1]]
-}
 ```
 
 ```{r eval=TRUE, echo=FALSE}
@@ -194,11 +191,6 @@ total_number_of_artefacts <- as.numeric(type_table$count[type_table$type == "tot
 
 The Guanyindong site, located in  Guanyindong village, Qianxi County of Guizhou Province (26°51′26″N, 105°58′7″E) at an elevation of 1464 m a.s.l., is a limestone cave site extending from east to west it was discovered by a team organized by the institute of Vertebrate Paleontology and Paleoanthropolgy (IVPP), Chinese Academy of Sciences in 1964. Several excavations were conducted in 1965, 1972 and 1973, yeilding   A total of `r type_table$count[2]` cores, `r type_table$count[1]` flakes, `r type_table$count[4]` retouched pieces and `r type_table$count[3]` pieces of debris were identified. 
 
-Introduction of paleolithc research in south Asia (or China). 
-
-Introduction the distribution of levollois technique (origin, dispersion, distribution). 
-
-Prolem: East Asia, why people thought no levollois. Why studying this site is important. Aim in this study.
 
 ## Raw materials
 
@@ -247,9 +239,10 @@ limestone_ret<- flakes %>%
 Previous research reported that the stone artefacts are preliminarily made of siliceous limestone, In my observation,the majority of siliceous limestone is classified as chert, therefore, the assemblage is dominated by chert (`r raw_material_tbl$Proportion[2]`%) followed by limestone (`r raw_material_tbl$Proportion[3]`%) and  basalt, sandstone and quartz  were only occasionally used and constitute % and % of the assemblage respectively. Although the chert selected varies slightly from color to texture, sub-classification is not conducted due to the consistence of their physical properties which are homogeneous without fracture, joint and constant hardness. Table? Shows the different types of stone artefact that chert and limestone were employed.  `r percentage_of_chert_tools` % chert flakes were retouched into stone tools indicating a high efficient exploit of this raw material, although it can be easily obtained nearby. In terms of retouched pieces, `r chert_ret` of them are made of chert, `r limestone_ret` of them are made from limestone. It is obvious that  hominins  intended to selected chert as optimal raw material to manufacture  stone tools. 
 
 
-	flakes	Retouched flakes	cores	debris	total
-Chert					
-limestone					
+				
+```{r}
+kable(raw_material_tbl)
+```
 
 The raw material source are mostly from local area that no further than 10km based on Leng and Li's investigation indicating the ability of local raw material guides the selectivity of kanppers . One possible chert source, located about 4 km (straight distence) is called Jinyan hill, where chert nodules are exposed on surface (Leng, 2001).For limestone and volcanic rocks like basalt and quartz are all from local mountain, river bed and exposed layers. The majority of raw material are accessable within 6 km (Li, 2009) suggesting  an relative small foraging territory. Leng also found that the natural chert, volcanic rock, and siliceous limestone nodules were generally larger than specimen from GYD. According to source investigation, ancient knappers were inclined to obtain raw material locally and traverl short distence to get access to raw material, besides, they were aware of raw material selection indicated by the preference of chert, which is easier control and has better flaking property as main knapping object. It also suggests that their foraging radius allows them to collect raw material and return to cave without overnight stop. 
 
@@ -279,9 +272,6 @@ flakes %>%
   group_by(`cortex texture`) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 0))
-
-         
-         
 ```
 
 Among the flakes in the assemblage, `r flakes_broken$perc[1]`% (n = `r flakes_broken$perc[2]`) are broken. Two processes are likely responsible for this high percentage: manufacturing failures during the knapping activity, and energetic taphonomic processes that have damages the artefacts after discard. The generally homogenous nature of the stone indicates that failures during knapping should be expected at a low frequency, assuming a compentent knapper. Thus, many of the breakages many be attributed to post-depositional processes such as ground surface breakage due to trampling. With just `r flakes_heated$n[1]` artefacts showing signs of heat treatment, we conclude that artefact damage due to excess heating occured at a negligible rate at GYD. 
@@ -289,6 +279,9 @@ Among the flakes in the assemblage, `r flakes_broken$perc[1]`% (n = `r flakes_br
 ## Flakes
 
 ```{r flakebasics}
+flakes <- 
+flakes %>% 
+  mutate(mass = readr::parse_number(mass))
 
 names(flakes)[30] <- "comment"
 complete_flakes <- 
@@ -404,13 +397,11 @@ ggplot(new_flakes,
 flake_cortex_perc <- flakes$`cortex percentage`[!is.na(flakes$`cortex percentage`)]
 flakes_with_20pc_cortex <- round(sum(flake_cortex_perc <= 20) / length(flake_cortex_perc) * 100, 1)
 
-
-
 # directions of flake scars
 
-
-
 ```
+
+
 
 ```{r, thicknessplot, fig.cap="Distribution of flake thickness at three points across the flake"}
 
@@ -456,6 +447,8 @@ We found `r nrow(flakes)` flake pieces including complete flake (`r n_complete_f
 In order to explore the possible relationship between platform shape with flake thickness, we compared the platform shapes with thickness at 50 max dim. Fig? shows that thickness of flakes which have CDG platform shape is more concentrated around 10-15mm. Flakes with triangle platform shape is the thickest around 20mm. Fig? shows the relationship between platform shapes and flake dimension.   % of flakes dorsal side is partially covered with cortex. Most of The cortex is limited ranging from 5 to 10 percentage.  The average scar number is `r average_scar_number` while the standard deviation is `r sd_scar_number`. Flakes with 3 dorsal scars are the largest proportion.`r round(flakes_with_4_or_less_scars,0)`% flakes have scar number less than 4. It suggests that before hominins brought knapping products into the cave, they knapped the blank outside of the cave therefore the flakes are on the late stage of knapping and with less cortex. The directions of scars of 356 flakes are recorded.  We divided the directions into 8 sections. Among them, `r flakes_same_scar_direction` flakes have dorsal scars that with the same directions of the flake, following with opposite direction(%). We also found a number of centripetal scars (%). Figure \@ref(fig:thicknessplot) shows the thickness distribution at 25%. 50% and 75%.From the chart, we can infer that the thickness at 25% is the thinnest place and thickness at 50% and 75% shares the same max dimension. It indicates that the knappers have a good control over thickness that can make the thickness under a particular thickness range. Since the max points of thickness of these three places are all around 12mm in GYD, it is reasonable to conclude that the form flakes of GYD is well controlled and relative flat.  
 
 ```{r eval= FALSE}
+# this is experimental... perhaps not useful yet
+
 # choose variables indicative of reduction pathways, based on http://link.springer.com.sci-hub.cc/article/10.1007/s10816-015-9255-x
 flakes_dissim <- 
 flakes %>% 
@@ -465,7 +458,7 @@ flakes %>%
          idx_of_elon = length/`Oriented width`) %>% 
   select(mass, 
          `scar number`, 
-         `platform width`, 
+         idx_of_elon, 
          `platform thickness`,
          `Thickness at 75% max dim`,
          idx_of_conv,
@@ -494,7 +487,14 @@ nb <- NbClust(flakes_dissim,
         index = "alllong", alphaBeale = 0.1)
 hist(nb$Best.nc[1,], breaks = max(na.omit(nb$Best.nc[1,]))) #  3
 # what are the distinctive attributes of these clusters?
+n_clust <- 3
+flakes_dissim$cluster <- nb$Best.partition
 
+ggplot(flakes_dissim,
+       aes(mass,
+           `platform thickness`,
+           colour = factor(cluster))) +
+  geom_point()
 
 ```
 
@@ -698,7 +698,7 @@ platform_cortex_core <-
 
 ## Cores
 
-We found `r nrow(cores)` cores in the lithic assemblage. The average max dimension is `r average_max_dimension` and with an average weight of `r average_mass` g. This dimension is slightly larger than flakes.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(`r percentage_chert_cores`%).  There are various geometries of cores including irregular(`r percentage_iregular_cores`%), conic(`r percentage_conic_cores`%), column(`r percentage_column_cores`%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (`r percentage_core_type_single`%), double platform (`r percentage_core_type_double`%), and multiple platform (`r percentage_core_type_multp`%). According to technological reduction, they can be classified as ordinary core (`r percentage_ordinary_cores`%), blade core (`r percentage_blade_cores`%), disc core (`r percentage_disc_cores`%) and Levallois core(`r percentage_leva_cores`%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is `r average_core_scar_length` mm which is .  Most of them are covered with zero(`r core_cortex_zero`%) or low percentage cortex which are less than `r N`% (`r cores_cortex_less_than_N`%Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
+We found `r nrow(cores)` cores in the lithic assemblage. The average max dimension is `r average_max_dimension` and with an average weight of `r average_mass` g. This dimension is slightly larger than flakes.The flaking technique of GYD is free hand percussion with hard hammer.  Chert dominates the raw material of cores(`r percentage_chert_cores`%).  There are various geometries of cores including irregular(`r percentage_iregular_cores`%), conic(`r percentage_conic_cores`%), column(`r percentage_column_cores`%) and small account of wedged and circle.  According to the number of platform, there are 3 types of cores: single platform (`r percentage_core_type_single`%), double platform (`r percentage_core_type_double`%), and multiple platform (`r percentage_core_type_multp`%). According to technological reduction, they can be classified as ordinary core (`r percentage_ordinary_cores`%), blade core (`r percentage_blade_cores`%), disc core (`r percentage_disc_cores`%) and Levallois core(`r percentage_leva_cores`%). Fig? shows the scar number of each core. The primary cores just produced 1-4 flake scars and then discarded. The cores that have more than 8 scars are occasionally shown. It suggests that the cores are not efficiently exploited. The average scar length is `r average_core_scar_length` mm which is .  Most of them are covered with zero(`r core_cortex_zero`%) or low percentage cortex which are less than `r N`% (`r cores_cortex_less_than_N`% Fig?) . The cortex location is always on platform (%) and bottom (%). Fig? shows the types of platform. The majority of platform type is plain (%) which suggests that using former scars as platform to continue flaking following flakes is the main strategy of knapping.  Remarkably, there are a notable amount of facet platforms() which presented with higher frequency on Levallois, blade and discoid cores indicating predetermined strategy was applied on more complicated techniques. The majority of cores have 1 or 2 rotation which means after knapping from one platform and then make a rotation to find a new platform to keep flaking when the original platform is no longer suitable for further knapping.  The small number of rotations reinforced the observation that most of cores in GYD are casual cores either due to the technological limitation or to the availability source of local raw materials.  
 
 ```{r retouch}
 retouch_as_proportion_of_all_artefacts <- round(nrow(retouch) / total_number_of_artefacts * 100, 1)
@@ -815,29 +815,27 @@ retouch_raw_material_metrics_long %>%
   unnest(t_test_tidy) %>% 
   filter(p.value < 0.05)
 # sig diff between cortext perc and plat thick for chert vs limestone
-  
-
- 
-
 ```
 
-```{r retouch_piece_shape}
+```{r retouch_piece_shape, eval = FALSE}
+metric_variables <- metric_variables[!is.na(metric_variables)]
 
-retouch_raw_material_metrics_plot <- 
-retouch_raw_material_metrics %>% 
-  select(material,  length, one_of(metric_variables)) %>% 
-  select(material, length, Width.at.50..max.dim, Thickness.at.50..max.dim) %>%
-  ggpairs(aes(colour = material))
-
-retouch_raw_material_metrics_plot_log_mass <- 
-  retouch_raw_material_metrics %>% 
-  select(material,  one_of(metric_variables)) %>% 
-  mutate(lw = length / Width.at.50..max.dim,
-         log_mass = log(mass)) %>% 
-  select(material, lw, log_mass) %>%
-  ggpairs(aes(colour = material))
+# sometihng wrong with ggpairs here... 
+# retouch_raw_material_metrics_plot <- 
+# retouch_raw_material_metrics %>% 
+#   select(material,  length, one_of(metric_variables)) %>% 
+#   select(material, length, Width.at.50..max.dim, Thickness.at.50..max.dim) 
+# 
+# retouch_raw_material_metrics_plot_log_mass <- 
+#   retouch_raw_material_metrics %>% 
+#   select(material,  one_of(metric_variables)) %>% 
+#   mutate(lw = length / Width.at.50..max.dim,
+#          log_mass = log(mass)) %>% 
+#   select(material, lw, log_mass) %>%
+#   ggpairs(aes(colour = material))
 
 # look at widths to check for circular shape or not
+library(ggforce)
 retouch_raw_material_metrics_big_small_shape_plot <- 
 retouch_raw_material_metrics %>% 
   mutate(mass_group = ifelse(mass > 300, "big", 
@@ -891,6 +889,9 @@ retouch_blank_type_tally %>%
   pull(perc) 
 
 ```
+
+All good up to here. 
+
 
 ```{r retouch_index_giur}
 
