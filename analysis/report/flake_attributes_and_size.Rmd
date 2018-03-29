@@ -60,7 +60,7 @@ Now let's see how some of the key variables change accross these size clusters:
 ```{r}
 flakes_clustered %>% 
   select_if(is.numeric) %>% 
-  select(-he) %>% 
+  select(-box) %>% 
   gather(variable, value, -cluster) %>% 
   filter(!is.na(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
@@ -78,8 +78,8 @@ What if we just look at flakes with very little cortex, and thus exclude the pri
 ```{r}
 flakes_clustered %>% 
   select_if(is.numeric) %>% 
-  select(-he) %>% 
-  filter(`cortex percentage` < 20) %>% 
+  select(-box) %>% 
+  filter(cortex_percentage < 20) %>% 
   gather(variable, value, -cluster) %>% 
   filter(!is.na(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
@@ -100,8 +100,8 @@ flakes_categorical <-
 flakes_clustered %>% 
   select_if(function(col) is.character(col) | 
                                    all(col == .$cluster)) %>% 
-  select(-site,  -layer, -number,  -dai, -yuanfenlei,
-         -comment, -X__1) %>% 
+  select(-bag,  -layer, -Li_classifi,  
+         -note, -number) %>% 
   gather(variable, value, -cluster) %>% 
   mutate(cluster = factor(cluster)) %>% 
   filter(!is.na(value)) %>% 
@@ -112,13 +112,70 @@ flakes_clustered %>%
   mutate(prop = n / sum(n) * 100) 
 
 
-  # ggplot(flakes_categorical,
-  #        aes(cluster,
-  #            prop,
-  #            fill = value)) +
-  # geom_col() +
-  # facet_wrap( ~ variable, scales = "free") +
-  # theme_minimal()
+# tidy up some of these variables
+library(stringr)
+flakes_clustered_cats <- 
+flakes_clustered %>% 
+  select_if(function(col) is.character(col) | 
+                                   all(col == .$cluster)) %>% 
+  select(-bag,  -layer, -Li_classifi,  
+         -note, -number)
+
+# material, ok
+flakes_clustered_cats %>% 
+ group_by(material) %>% 
+ tally(sort = TRUE)
+
+# type1, ok
+flakes_clustered_cats %>% 
+ group_by(type1) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats <- 
+  flakes_clustered_cats %>% 
+  mutate(type3 = if_else(str_detect(type1, "lv|lev"), "levallois", type1)) %>% 
+  mutate(type3 = if_else(str_detect(type1, "ret"), "retouch", type3)) %>% 
+  mutate(type3 = if_else(str_detect(type1, "blade|bld"), "blade", type3)) 
+
+flakes_clustered_cats %>% 
+ group_by(type3) %>% 
+ tally(sort = TRUE)
+
+# type 2, special case
+flakes_clustered_cats %>% 
+ group_by(type2) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats %>% 
+ separate_rows(type2, sep = ",")
+
+# Platform
+flakes_clustered_cats %>% 
+ group_by(platform) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats %>% 
+ group_by(platform_shape) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats %>% 
+ group_by(cortex_texture) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats %>% 
+ group_by(cortex_location) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats %>% 
+ group_by(initiation) %>% 
+ tally(sort = TRUE)
+
+flakes_clustered_cats %>% 
+ group_by(platform_preparation) %>% 
+ tally(sort = TRUE)
+
+
+
 ```
 
 Try for a nice plot
@@ -134,14 +191,14 @@ out <- by(data = flakes_categorical,
                          group=1, 
                          fill = value)) + 
          geom_col() +
-        theme(legend.key.size = unit(1,"line")),
-              legend.keywidth = unit(1,"line")),
-              legend.key.width = unit(1,"line")))
+        theme(legend.key.size = unit(0.1,"line"),
+              legend.key.width = unit(0.1,"line"),
+              legend.key.height = unit(0.1,"line"))
    })
 do.call(grid.arrange, out)
 
 # If you want to supply the parameters to grid.arrange
-do.call(grid.arrange, c(out, ncol=3))
+# do.call(grid.arrange, c(out, ncol=3))
 ```
 
 

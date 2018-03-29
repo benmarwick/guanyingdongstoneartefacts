@@ -29,7 +29,7 @@ library(GGally)
 library(ggforce)
 # set working directory to source
 # original filename: artefacts (自动保存的).xls 
-file_name <- here::here("analysis/data/data_raw/artefacts (xxx).xls") 
+file_name <- here::here("analysis/data/data_raw/artefacts-after Sam_Nov2017.xls") 
 quiet_read <- purrr::quietly(readxl::read_excel)
 flakes <- quiet_read(file_name, sheet = "flake basics")$result
 cores <- quiet_read(file_name, sheet = "core basics")$result
@@ -42,6 +42,10 @@ names(core_scars_length) <- make.names(names(core_scars_length))
 ```
 
 ```{r deal-with-duplicates, eval=TRUE, echo=FALSE}
+# some mix of upper and lower case
+flakes <- flakes %>% 
+  mutate_all(tolower)
+
 # are the artefact numbers really unique?
 # sum(duplicated(flakes$number))
 
@@ -60,28 +64,69 @@ flakes_duplicated$number <- paste0(flakes_duplicated$number, "a")
 # put back into original data 
 flakes <- rbind(flakes, flakes_duplicated)
 
-flakes$initiation <- ifelse(flakes$initiation %in% c("hert", "h"), "hertzian",
-                            ifelse(flakes$initiation == "bend", "bending",
-                                   ifelse(flakes$initiation %in% c("wedging", "wed"), "wedge",
-                                          ifelse(flakes$initiation %in% c("miss", "mis"),
-                                                 "missing", flakes$initiation))))
+flakes$initiation <-
+  ifelse(
+  flakes$initiation %in% c("hert", "h"),
+  "hertzian",
+  ifelse(
+  flakes$initiation == "bend",
+  "bending",
+  ifelse(
+  flakes$initiation %in% c("wedging", "wed"),
+  "wedge",
+  ifelse(
+  flakes$initiation %in% c("miss", "mis"),
+  "missing",
+  flakes$initiation
+  )
+  )
+  )
+  )
+  
+  
+  flakes$platform <- ifelse(
+  flakes$platform == "plane",
+  "plain",
+  ifelse(
+  flakes$platform %in% c("miss", "mis", "42.000000", "0.000000", "overh"),
+  "missing",
+  ifelse(flakes$platform == "facted", "faceted", flakes$platform)
+  )
+  )
+  
+  flakes$termination <- ifelse(
+  flakes$termination == "f",
+  "feather",
+  ifelse(
+  flakes$termination == "br",
+  "break",
+  ifelse(
+  flakes$termination %in% c("brpt", "brput"),
+  "abrupt",
+  ifelse(
+  flakes$termination == "plung",
+  "plunge",
+  ifelse(
+  flakes$termination == "st",
+  "step",
+  ifelse(
+  flakes$termination %in% c("m", "miss", "na", "over"),
+  "missing",
+  flakes$termination
+  )
+  )
+  )
+  )
+  )
+  )
 
+   flakes$material <- ifelse(
+  flakes$material == "qutz",
+  "quartz",flakes$material )
 
-flakes$platform <- ifelse(flakes$platform == "plane", "plain",
-                          ifelse(flakes$platform %in% c("miss", "mis", "42.000000", "0.000000", "overh"), "missing",
-                                 ifelse(flakes$platform == "facted", "faceted",flakes$platform)))
-
-flakes$termination <- ifelse(flakes$termination == "f", "feather",
-                             ifelse(flakes$termination == "br", "break",
-                                    ifelse(flakes$termination %in% c("brpt", "brput"), "abrupt",
-                                           ifelse(flakes$termination == "plung", "plunge",
-                                                  ifelse(flakes$termination == "st", "step",
-                                                         ifelse(flakes$termination %in% c("m", "miss", "na", "over"), "missing",flakes$termination))))))
-
-
-flakes$`Width at 25% max dim` <- ifelse(flakes$`Width at 25% max dim` == 332.7, 33.2,
-                                        ifelse(flakes$`Width at 25% max dim` == 668, 66.8,flakes$`Width at 25% max dim`))
-
+  flakes$`Width_25%max` <- ifelse(flakes$`Width_25%max` == 332.7, 33.2,
+  ifelse(flakes$`Width_25%max` == 668, 66.8, flakes$`Width_25%max`))
+  
 # do the same for the retouch...
 
 # are the artefact numbers really unique?
@@ -121,7 +166,6 @@ debris_duplicated$number <- paste0(debris_duplicated$number, "a")
 # put back into original data 
 debris <- rbind(debris, debris_duplicated)
 
-
 # do the same for the core...
 
 # are the artefact numbers really unique?
@@ -141,16 +185,12 @@ cores <- cores[!duplicated(cores$number), ]
 # put back into original data 
 cores <- rbind(cores, cores_duplicated)
 
-
-
 ############
 # basic details of the dataset
 artefact_ids <- list(flake_ids = flakes$number,
                      core_ids = cores$number,
                      debris_ids = debris$number,
                      retouch_ids = retouch$number)
-
-
 
 # how many unique artefacts?
 totals_of_each_type <- lapply(artefact_ids, function(i) length(unique(i)))
@@ -218,20 +258,20 @@ left_join(retouch) %>%
 filter(!is.na(`number of layers`))
 # how many chert flakes?
 
-chert_flake<- sum(grepl("chert", flakes$material))
+chert_flake <- sum(grepl("chert", flakes$material))
 
 
-chert_ret<- flakes %>% 
+chert_ret <- flakes %>% 
   filter(grepl("chert", material)) %>%
-  filter(grepl("ret", type)) %>% 
+  filter(grepl("ret", type1)) %>% 
   nrow()
 percentage_of_chert_tools <-round(chert_ret/chert_flake * 100, 2)
 
 # how many retouched pieces were limestone
 
-limestone_ret<- flakes %>% 
+limestone_ret <- flakes %>% 
   filter(grepl("limestone", material)) %>%
-  filter(grepl("ret", type)) %>% 
+  filter(grepl("ret", type1)) %>% 
   nrow()
 
 ```
@@ -252,7 +292,7 @@ The raw material source are mostly from local area that no further than 10km bas
 # how many flakes are broken?
 flakes_broken <- 
 flakes %>% 
-  mutate(broken = if_else(grepl("brk|break|proximal", type), "broken", "not broken")) %>% 
+  mutate(broken = if_else(grepl("brk|break|proximal", type2), "broken", "not broken")) %>% 
   group_by(broken) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 0))
@@ -261,7 +301,7 @@ flakes %>%
 flakes_heated <- 
 flakes %>% 
   mutate(heated = if_else(grepl("heat", 
-                                `heat treatment/damage`), "heated", "not heated")) %>% 
+                                `heat_damage`), "heated", "not heated")) %>% 
   group_by(heated) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 0))
@@ -269,7 +309,7 @@ flakes %>%
 # how are the surface textures?
 flakes_surf <- 
 flakes %>% 
-  group_by(`cortex texture`) %>% 
+  group_by(cortex_texture) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 0))
 ```
@@ -281,25 +321,31 @@ Among the flakes in the assemblage, `r flakes_broken$perc[1]`% (n = `r flakes_br
 ```{r flakebasics}
 flakes <- 
 flakes %>% 
-  mutate(mass = readr::parse_number(mass))
+  mutate(mass = readr::parse_number(mass)) %>% 
+  mutate_at(vars(length            ,  
+                 max_dimension     ,   oriented_width   ,    `Width_25%max`       , 
+                 `Width_50%max`      ,   `Width_75%max`     ,    oriented_thickness , 
+                 `Thickness_25%max`  ,   `Thickness_50%max` ,    `Thickness_75%max`   , 
+                 mass                       ,    platform_width     , 
+                 platform_thickness, scar_number, cortex_percentage ), as.numeric)
 
 names(flakes)[30] <- "comment"
 complete_flakes <- 
 flakes %>% 
-  filter(!grepl("brk|break|proximal|ret|retouch|pebble|tanged", type))
+  filter(!grepl("brk|break|proximal|ret|retouch|pebble|tanged", type1))
 n_complete_flakes <- nrow(complete_flakes)
 
 ret_flakes <- 
 flakes %>% 
-  filter(grepl("ret|retouch", type))
+  filter(grepl("ret|retouch", type1))
 
 n_ret_flakes <- nrow(ret_flakes)
-flake_length_mean <- round(mean(flakes$length, na.rm = TRUE),1) #there are thousands of flakes
-flake_thick_mean <- round(mean(flakes$`Oriented thickness`, na.rm = TRUE),1)
+flake_length_mean <- round(mean(as.numeric(flakes$length), na.rm = TRUE),1) #there are thousands of flakes
+flake_thick_mean <- round(mean(as.numeric(flakes$oriented_thickness), na.rm = TRUE),1)
 
 # dorsal flake scars
 # we only want flakes that have 0 or more scars, no NA values
-flake_scar_numbers <- flakes$`scar number`[!is.na(flakes$`scar number`)]
+flake_scar_numbers <- as.numeric(flakes$scar_number)[!is.na(as.numeric(flakes$scar_number))]
 dorsal_flake_scar_mean <- round(mean(flake_scar_numbers), 2)
 dorsal_flake_scar_sd <- round(sd(flake_scar_numbers), 2)
 # looking at hist(flake_scar_numbers) I see that most flakes have 3 or fewer scars
@@ -307,42 +353,44 @@ dorsal_flake_scar_sd <- round(sd(flake_scar_numbers), 2)
 flakes_with_4_or_less_scars <- round(sum(flake_scar_numbers <= 4) / length(flake_scar_numbers) * 100, 1)
 # what about the relationship between number of flake scars and artefact size?
 cor_flake_scars_and_mass <- 
-with(flakes, cor(`scar number`, mass, use = "pairwise.complete.obs"))
+with(flakes, cor(scar_number, mass, use = "pairwise.complete.obs"))
 
 
 # Flake platforms
 flakes_platforms <- 
 flakes %>% 
-filter(!grepl("NA|0.000000|42.000000|mis", platform)) %>% filter(!grepl("ret|retouch|pebble", type)) %>% 
-group_by(platform) %>% 
-tally() %>% 
-filter(!is.na(platform)) %>% 
-mutate(perc = round(n/sum(n),3) * 100) %>% 
-arrange(desc(perc))
+  select(platform, type1) %>% 
+  filter(!grepl("NA|0.000000|42.000000|mis", platform)) %>%      
+  filter(!grepl("ret|retouch|pebble", type1)) %>% 
+  group_by(platform) %>% 
+  tally() %>% 
+  filter(!is.na(platform)) %>% 
+  mutate(perc = round(n/sum(n),3) * 100) %>% 
+ arrange(desc(perc))
 
 # percentage of each platform type
 cortex_plat_perc <- flakes_platforms[flakes_platforms$platform == "cotex", ]$perc
 plain_plat_perc <- flakes_platforms[flakes_platforms$platform == "plain", ]$perc
 dihederal_plat_perc <- flakes_platforms[flakes_platforms$platform == "dihederal", ]$perc
-facet_plat_perc <- flakes_platforms[flakes_platforms$platform == "facet", ]$perc
+facet_plat_perc <- flakes_platforms[flakes_platforms$platform == "faceted?", ]$perc
 
 flakes_platform_shape <- 
 flakes %>% 
-filter(!grepl("NA", `platform shape`)) %>% 
-  filter(!grepl("ret|retouch|pebble", type)) %>% 
-  group_by(`platform shape`) %>% 
+filter(!grepl("NA", platform_shape)) %>% 
+  filter(!grepl("ret|retouch|pebble", type1)) %>% 
+  group_by(platform_shape) %>% 
   tally() %>% 
-  filter(!is.na(`platform shape`)) %>% 
+  filter(!is.na(platform_shape)) %>% 
   mutate(perc = round(n/sum(n),3) * 100) %>% 
   arrange(desc(perc))
 
-triangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "triangle", ]$perc
+triangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$platform_shape == "triangle", ]$perc
 
-fusiform_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "sx", ]$perc
+fusiform_platshp_perc <- flakes_platform_shape[flakes_platform_shape$platform_shape == "sx", ]$perc
 
-quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "sb", ]$perc
+quadrangle_platshp_perc <- flakes_platform_shape[flakes_platform_shape$platform_shape == "sb", ]$perc
 
-CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$`platform shape` == "CDG", ]$perc
+CDG_platshp_perc <- flakes_platform_shape[flakes_platform_shape$platform_shape == "CDG", ]$perc
 
 average_scar_number <- round(mean(flake_scar_numbers, na.rm = FALSE), 2)
 
@@ -354,9 +402,9 @@ flakes_with_4_or_less_scars <- sum(flake_scar_numbers <= 4 )/length(flake_scar_n
 
 # Cortex percentage
 
-flake_cortex_percentage <- flakes$`cortex percentage`[!is.na(flakes$`cortex percentage`)]
+flake_cortex_percentage <- flakes$cortex_percentage[!is.na(flakes$cortex_percentage)]
 
-flakes_with_10_or_less_cortex<- sum(flake_cortex_percentage <= 10 )/length(flake_cortex_percentage)*100
+flakes_with_10_or_less_cortex <- sum(flake_cortex_percentage <= 10 )/length(flake_cortex_percentage)*100
 
 # scar direction
 
@@ -381,7 +429,7 @@ scar_direction %>%
 
 # Thickness for flakes, by platform shape
 
-new_flakes <- flakes[flakes$`platform shape` %in% c("CDG", "triangle", "sb", "sx"), ]
+new_flakes <- flakes[flakes$platform_shape %in% c("CDG", "triangle", "sb", "sx"), ]
 
 new_flakes[new_flakes == "sb"] = "quadrangle"
 
@@ -389,12 +437,12 @@ new_flakes[new_flakes == "sx"] = "fusiform"
 
 flakes_platform_shape_plot <- 
 ggplot(new_flakes, 
-       aes(`Thickness at 25% max dim`, 
-           colour = `platform shape`)) +
+       aes(`Thickness_25%max`, 
+           colour = platform_shape)) +
   geom_density()
 
 # dorsal flake cortex
-flake_cortex_perc <- flakes$`cortex percentage`[!is.na(flakes$`cortex percentage`)]
+flake_cortex_perc <- flakes$cortex_percentage[!is.na(flakes$cortex_percentage)]
 flakes_with_20pc_cortex <- round(sum(flake_cortex_perc <= 20) / length(flake_cortex_perc) * 100, 1)
 
 # directions of flake scars
@@ -406,22 +454,22 @@ flakes_with_20pc_cortex <- round(sum(flake_cortex_perc <= 20) / length(flake_cor
 ```{r, thicknessplot, fig.cap="Distribution of flake thickness at three points across the flake"}
 
 flakes_L <-  
-  mutate(flakes, L = ifelse(grepl("leva", type), "L", "N"))
+  mutate(flakes, L = ifelse(grepl("leva", type1), "L", "N"))
 
 
 # explore variation in thickness in these groups
 line_weight <- 1
 library(ggplot2)
 thick_plot <- ggplot(flakes_L) +
-  geom_density(aes(`Thickness at 25% max dim`), 
+  geom_density(aes(`Thickness_25%max`), 
                colour = "red", 
                alpha = 0.3,
                size = line_weight) +
-  geom_density(aes(`Thickness at 50% max dim`), 
+  geom_density(aes(`Thickness_50%max`), 
                colour = "green", 
                alpha = 0.3,
                size = line_weight) +
-  geom_density(aes(`Thickness at 75% max dim`), 
+  geom_density(aes(`Thickness_75%max`), 
                colour = "blue", 
                alpha = 0.3, 
                size = line_weight) +
@@ -436,9 +484,9 @@ thick_plot <- ggplot(flakes_L) +
 
 ```{r flake_platform}
 # the average thickness of platform 
-average_platform_thickness <- round(mean(flakes$`platform thickness`, na.rm = TRUE),2)
+average_platform_thickness <- round(mean(flakes$platform_thickness, na.rm = TRUE),2)
 # the average width of platform
-average_platform_width <- round(mean(flakes$`platform width`, na.rm = TRUE),2)
+average_platform_width <- round(mean(flakes$platform_width, na.rm = TRUE),2)
 ```
 
 
@@ -452,15 +500,15 @@ In order to explore the possible relationship between platform shape with flake 
 # choose variables indicative of reduction pathways, based on http://link.springer.com.sci-hub.cc/article/10.1007/s10816-015-9255-x
 flakes_dissim <- 
 flakes %>% 
-  filter(`cortex percentage` < 20) %>% 
-  mutate(idx_of_conv = `Thickness at 50% max dim`/`Thickness at 75% max dim`,
-         idx_of_flat = `Width at 50% max dim`/`Thickness at 50% max dim`,
-         idx_of_elon = length/`Oriented width`) %>% 
+  filter(cortex_percentage < 20) %>% 
+  mutate(idx_of_conv = `Thickness_50%max`/`Thickness_75%max`,
+         idx_of_flat = `Width_50%max`/`Thickness_50%max`,
+         idx_of_elon = length/oriented_width) %>% 
   select(mass, 
-         `scar number`, 
+         scar_number, 
          idx_of_elon, 
-         `platform thickness`,
-         `Thickness at 75% max dim`,
+         platform_thickness,
+         `Thickness_75%max`,
          idx_of_conv,
          idx_of_flat,
          idx_of_elon) %>% 
@@ -505,6 +553,11 @@ ggplot(flakes_dissim,
 
 ```{r corebasics}
 
+cores <- 
+  cores %>% 
+  mutate_at(vars(mass), as.numeric)
+
+
 # number of platforms on cores
 cores_platform_numbers <- 
   cores %>% 
@@ -523,21 +576,21 @@ cores %>%
    mutate(perc = round(n / sum(n) * 100, 1))
 # cores shapes
 cores %>% 
-  select(`core geometry`) %>% 
-  group_by(`core geometry`) %>% 
+  select(core_geometry) %>% 
+  group_by(core_geometry) %>% 
   tally() %>% 
    mutate(perc = round(n / sum(n) * 100, 1))
 # core types 
 core_types <- cores %>% 
-  select(`type`) %>% 
-  group_by(`type`) %>% 
+  select(type) %>% 
+  group_by(type) %>% 
   tally() %>% 
    mutate(perc = round(n / sum(n) * 100, 1))
 core_type_single <- core_types %>% 
   filter(type == "single") %>% 
   .$perc
 
-average_max_dimension <- mean(cores$`max dimension`, na.rm = TRUE)
+average_max_dimension <- mean(cores$max_dimension, na.rm = TRUE)
 average_mass <- mean(cores$mass, na.rm = TRUE)
 
 # How many chert in cores 
@@ -553,29 +606,29 @@ percentage_chert_cores <-
 #  percentage of each geometries of cores 
 percentage_iregular_cores <- 
   cores %>%
-  select(`core geometry`) %>% 
-  group_by(`core geometry`) %>% 
+  select(core_geometry) %>% 
+  group_by(core_geometry) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 1))  %>% 
-  filter(`core geometry` == "iregular") %>% 
+  filter(core_geometry == "iregular") %>% 
   pull(perc)
 
 percentage_conic_cores <- 
   cores %>%
-  select(`core geometry`) %>% 
-  group_by(`core geometry`) %>% 
+  select(core_geometry) %>% 
+  group_by(core_geometry) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 1))  %>% 
-  filter(`core geometry` == "conic") %>% 
+  filter(core_geometry == "conic") %>% 
   pull(perc)
 
 percentage_column_cores <- 
   cores %>%
-  select(`core geometry`) %>% 
-  group_by(`core geometry`) %>% 
+  select(core_geometry) %>% 
+  group_by(core_geometry) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 1))  %>% 
-  filter(`core geometry` == "column") %>% 
+  filter(core_geometry == "column") %>% 
   pull(perc)
   
 # different platform number of each core
@@ -592,7 +645,6 @@ percentage_core_type_tally <-
   group_by(cores_type) %>% 
   tally() %>% 
   mutate(perc = round(n/ sum(n) * 100, 1)) 
-
 
 percentage_core_type_single <- 
   percentage_core_type_tally %>% 
@@ -659,15 +711,15 @@ average_core_scar_length <- round(mean(core_scars_length_long$value, na.rm = TRU
 
 cortex_percentage<- 
   cores %>% 
-  select(`cortex percentage`) %>% 
-  group_by(`cortex percentage`) %>% 
+  select(cortex_percentage) %>% 
+  group_by(cortex_percentage) %>% 
   tally() %>% 
   mutate(perc = round(n / sum(n) * 100, 1))
 
 
 core_cortex_zero <-
   cortex_percentage %>% 
-  filter(`cortex percentage` == 0) %>% 
+  filter(cortex_percentage == 0) %>% 
   pull(perc)
   
 
@@ -675,15 +727,15 @@ core_cortex_zero <-
 N <-  30
 cores_cortex_less_than_N <-
   cortex_percentage %>% 
-  filter(`cortex percentage` < N) %>% 
+  filter(cortex_percentage < N) %>% 
   pull(perc) %>% 
   sum()
   
 # the cortex location of cores
 core_cortex_location_percentage <-
   cores %>% 
-  mutate(cores_cortex_location = ifelse(`cortex location` %in% c("prox", "up"), "platform", 
-        ifelse(`cortex location` == "distal", "bottom","cortex location"))) %>% 
+  mutate(cores_cortex_location = ifelse(cortex_location %in% c("prox", "up"), "platform", 
+        ifelse(cortex_location == "distal", "bottom","cortex location"))) %>% 
   group_by(cores_cortex_location) %>% 
 tally() %>% 
 mutate(perc = round(n / sum(n) * 100, 1))
@@ -711,9 +763,9 @@ flakes_clean <-
   flakes_clean %>% 
    mutate(retouch_complete = 
             ifelse(grepl("^ret$|^ret $|^retblank$|ret bnk",
-                         type), 
+                         type1), 
                    "complete_retouch", 
-            ifelse(type  == "flk", 
+            ifelse(type1  == "flk", 
             "complete_flake", 
             "NA")))
 
@@ -728,7 +780,7 @@ flakes_clean %>%
   group_by(retouch_complete) %>% 
   summarise_if(is.numeric, mean, na.rm = TRUE)
 
-basic_metrics <- c("length" , "max.dimension" , "Oriented.width" ,   "Width.at.25..max.dim" , "Width.at.50..max.dim" ,   "Width.at.75..max.dim" , "Oriented.thickness" ,   "Thickness.at.25..max.dim" ,   "Thickness.at.50..max.dim" ,   "Thickness.at.75..max.dim" , "mass" ,   "platform.width" , "platform.thickness" ,   "scar.number" , "cortex.percentage")
+basic_metrics <- c("length" , "max_dimension" , "oriented_width" ,   "Width_25.max" , "Width_50.max" ,   "Width_75.max" , "oriented_thickness" ,   "Thickness_25.max" ,   "Thickness_50.max" ,   "Thickness_75.max" , "mass" ,   "platform_width" , "platform_thickness" ,   "scar_number" , "cortex_percentage")
 
 # look at basic metrics for complete flakes and complete retouched pieces
 complete_flakes_retouch <- 
@@ -750,15 +802,16 @@ ggplot(complete_flakes_retouch,
 library(broom)
 t_test_retouch_non_retouch_metrics <- 
 complete_flakes_retouch %>% 
+  mutate(value = as.numeric(value)) %>% 
   group_by(variable) %>% 
   do(tidy(t.test(value ~ retouch_complete, data=.))) %>% 
   arrange(p.value) %>% 
-  filter(p.value < 0.05)
+  filter(p.value <= 0.05)
 # retouch flakes are significantly longer, and thicker at all places where we measured thickness
 # average max dimesion of retouched pieces 
 average_max_dim_ret <- flakes_clean %>% 
- filter(grepl("ret|retouch", type)) %>% 
-  dplyr::summarise(mean(max.dimension, na.rm = TRUE))
+ filter(grepl("ret|retouch", type1)) %>% 
+  dplyr::summarise(mean(max_dimension, na.rm = TRUE))
 ```
 
 ```{r retouch_by_raw_material}
@@ -841,34 +894,31 @@ retouch_raw_material_metrics %>%
   mutate(mass_group = ifelse(mass > 300, "big", 
                              ifelse(mass < 25, "small", NA))) %>% 
   dplyr::select(dplyr::matches("Width|material|number|mass_group")) %>% 
-  select(-scar.number, 
+  select(-scar_number, 
          -`number of layers`,
          -`number of edge`, 
          -`number of burins`,
-         -Oriented.width) %>% 
+         -oriented_width) %>% 
   
   gather(variable, value, -material, -number, -mass_group) %>% 
   filter(!is.na(mass_group)) %>% 
   ggplot(aes(variable,
              value,
              colour = mass_group)) +
-  geom_boxplot() +
-  geom_sina()
-
-
+  geom_boxplot() 
 ```
 
 ```{r retouch_blank_type}
 
 retouch_blank_type_tally <- 
 retouch_raw_material_metrics %>% 
-  filter(grepl("blank|bnk|^ret$|^ret $|retouch|^ret brk$|pebble|chunk", type)) %>% 
+  filter(grepl("blank|bnk|^ret$|^ret $|retouch|^ret brk$|pebble|chunk", type1)) %>% 
   mutate(type3 = 
-  ifelse(type %in% c("ret", "ret ", "retouch", "retouched"),
+  ifelse(type1 %in% c("ret", "ret ", "retouch", "retouched"),
         "flake",
-  ifelse(type %in% c("ret blank", "ret bnk", "ret brk","retouched blank"), 
+  ifelse(type1 %in% c("ret blank", "ret bnk", "ret brk","retouched blank"), 
         "broken flake", 
-  ifelse(type == "pebble",
+  ifelse(type1 == "pebble",
          "pebble", "chunk")))) %>% 
   group_by(type3) %>% 
   tally() %>% 
