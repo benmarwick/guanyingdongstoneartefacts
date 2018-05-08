@@ -1,7 +1,7 @@
 #### -- set repos to MRAN  -- ####
 
 # set date
-my_date <- "2016-11-30"
+my_date <- "2018-05-08"
 
 my_MRAN <- paste0("https://mran.revolutionanalytics.com/snapshot/",
                   my_date)
