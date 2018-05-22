@@ -17,13 +17,30 @@ THe reviewers ask:
 >  can they offer other data that might elucidate changes in flaking type with reduction, e.g. changes in flake attributes that correlate with size declines?
 
 
-Read in the data, deal with dupicates, get the basic flake details...
+Read in the data, deal with dupicates, get the basic flake details, run from L454 of hu_artefacts_report.Rmd
 
 Let's see if there are any natural groupings in flake mass:
 
 ```{r}
-hist(flakes$mass)
-hist(log(flakes$mass))
+
+flake_hist_1 <- 
+ggplot(flakes,
+       aes(mass)) +
+  geom_histogram() +
+  theme_minimal() +
+  xlab("Mass (g)")
+
+flake_hist_2 <- 
+ggplot(flakes,
+       aes(mass)) +
+  geom_histogram() +
+  theme_minimal() +
+  scale_x_log10() +
+  xlab("Mass (g)")
+
+
+library(cowplot)
+flake_mass_distributions <- plot_grid(flake_hist_1, flake_hist_2, ncol = 1)
 ```
 
 Nothing obvious, let's try a little clustering. We will try univariate clustering:
@@ -59,16 +76,19 @@ ggplot(flakes_clustered,
 Now let's see how some of the key variables change accross these size clusters:
 
 ```{r}
+library(stringr)
+flakes_clustered_numeric_vars_plot <- 
 flakes_clustered %>% 
   select_if(is.numeric) %>% 
   gather(variable, value, -cluster) %>% 
   filter(!is.na(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
+  mutate(variable = str_replace_all(variable, "_", " ")) %>% 
   ggplot(aes(cluster,
              value)) +
-  geom_boxplot() +
+  geom_boxplot(position = position_dodge2(preserve = "total")) +
   facet_wrap( ~ variable, scales = "free_y") +
-  theme_minimal()
+  theme_minimal(base_size = 8)
 ```
 
 We see that some dimensions don't increase with size. Platform thickness decreases a little, as mass goes up, platform width becomes more variable. Scar numbers have less high outliers as size increases. 
@@ -76,6 +96,7 @@ We see that some dimensions don't increase with size. Platform thickness decreas
 What if we just look at flakes with very little cortex, and thus exclude the primary reduction flakes:
 
 ```{r}
+flakes_clustered_numeric_vars_low_cortex_plot <- 
 flakes_clustered %>% 
   select_if(is.numeric) %>% 
   filter(cortex_percentage < 20) %>% 
@@ -97,6 +118,7 @@ How about the categorical variables?
 
 flakes_categorical <- 
 flakes_clustered %>% 
+  filter(cortex_percentage < 20) %>% 
   select_if(function(col) is.character(col) | 
                                    all(col == .$cluster)) %>% 
   select(-one_of(c("bag", "layer", "Li_classifi", "note", "number"))) %>% 
@@ -132,13 +154,16 @@ flakes_clustered_cats %>%
 
 flakes_clustered_cats <- 
   flakes_clustered_cats %>% 
-  mutate(type1 = if_else(str_detect(type1, "lv|lev"), "levallois", type1)) %>% 
+  mutate(type1 = if_else(str_detect(type1, "lv|lev"), "Levallois", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "ret"), "retouch", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "blade|bld"), "blade", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "flk|flake"), "flake", type1)) %>% 
-  mutate(type1 = fct_lump(type1, 6))
+  mutate(type1 = if_else(str_detect(type1, "dbd"), "débordant", type1)) %>% 
+  mutate(type1 = if_else(str_detect(type1, "kbw"), "Kombewa", type1)) %>% 
+  mutate(type1 = if_else(str_detect(type1, "end"), "end scraper", type1)) %>% 
+  mutate(type1 = fct_lump(type1, 5))
 
-# type 2, special case
+# type 2, special case , retouch types
 flakes_clustered_cats %>% 
  group_by(type2) %>% 
  tally(sort = TRUE)
@@ -154,8 +179,11 @@ flakes_clustered_cats %>%
   mutate(type2a = if_else(str_detect(type2a, "not"), "notch", type2a)) %>% 
   mutate(type2a = if_else(str_detect(type2a, "bur"), "burin", type2a)) %>% 
   mutate(type2a = if_else(str_detect(type2a, "point"), "point", type2a)) %>% 
+  mutate(type2a = if_else(str_detect(type2a, "dent"), "denticulate", type2a)) %>% 
+  mutate(type2a = if_else(str_detect(type2a, "scp"), "scraper", type2a)) %>% 
   mutate(type2a = str_squish(type2a))  %>% 
-  mutate(type2a = fct_lump(type2a, 10))
+  mutate(type2a = fct_lump(type2a, 10)) %>% 
+  filter(!is.na(type2a))
 
 # check it
 flakes_clustered_cats %>% 
@@ -171,7 +199,8 @@ flakes_clustered_cats <-
   flakes_clustered_cats %>% 
    mutate(platform = if_else(str_detect(platform, "facet"), "facetted", platform)) %>% 
    mutate(platform = if_else(str_detect(platform, "cotex|cortex"), "cortex", platform)) %>%
-   mutate(platform = fct_lump(platform, 6))
+   mutate(platform = fct_lump(platform, 6)) %>% 
+  filter(!is.na(platform))
   
 # platform shape, ok
 flakes_clustered_cats %>% 
@@ -187,7 +216,11 @@ filter(n >= 10)
 
 flakes_clustered_cats <- 
 flakes_clustered_cats %>% 
-   mutate(platform_shape = fct_lump(platform_shape, 4))
+  mutate(platform_shape = if_else(platform_shape == "sb", "quadrangle", platform_shape)) %>%
+  mutate(platform_shape = if_else(platform_shape == "cdg", "chapeau de gendarme", platform_shape)) %>%
+  mutate(platform_shape = if_else(platform_shape == "sx", "rhombus", platform_shape)) %>%
+  mutate(platform_shape = fct_lump(platform_shape, 4))  %>% 
+  filter(!is.na(platform_shape))
 
 # cortex texture, ok -- up to here --
 flakes_clustered_cats %>% 
@@ -201,8 +234,12 @@ flakes_clustered_cats %>%
 
 flakes_clustered_cats <- 
   flakes_clustered_cats %>% 
-   mutate(cortex_location = if_else(str_detect(cortex_location, "prox"), "proximal", cortex_location)) %>%
-   mutate(cortex_location = fct_lump(cortex_location, 6))
+   mutate(cortex_location = if_else(str_detect(cortex_location, "prox"), 
+                                    "proximal", 
+                                    cortex_location)) %>%
+   mutate(cortex_location = fct_lump(cortex_location, 6)) %>% 
+  filter(!is.na(cortex_location),
+         cortex_location != "vent")
 
 # initiation, ok 
 flakes_clustered_cats %>% 
@@ -235,7 +272,9 @@ flakes_clustered_cats %>%
          variable != "comment",
          variable != "heat_damage",
          variable != "platform_preparation",
-         variable != "type2c") %>% 
+         variable != "type2c",
+         variable != "type2b",
+         variable != "box") %>% 
   mutate(value = str_squish(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
   group_by(cluster, variable, value) %>% 
@@ -259,15 +298,24 @@ out <- by(data = flakes_clustered_cats_long,
                          fill = value)) + 
          geom_col() +
          xlab("") +
-        theme(legend.key.size = unit(0.2,"line"),
+        theme(legend.text=element_text(size = 5),
+              legend.key.size = unit(0.2,"line"),
               legend.key.width = unit(0.2,"line"),
-              legend.key.height = unit(0.2,"line"))
-      m <- m + guides(fill=guide_legend(title=unique(flakes_clustered_cats_long$variable))) 
+              legend.key.height = unit(0.2,"line"),
+              legend.title = element_blank()) +
+        ggtitle(str_glue('{m$variable}'))
    })
-do.call(grid.arrange, out)
+
+# do.call(grid.arrange, out)
+
+# this will line them up nicely
+categorical_plots_arranged <- 
+cowplot::plot_grid(plotlist = out,
+                   align = "hv",
+                   axis = "tblr")
 
 # order of items is
-unique(flakes_clustered_cats_long$variable)
+# unique(flakes_clustered_cats_long$variable)
 
 # If you want to supply the parameters to grid.arrange
 # do.call(grid.arrange, c(out, ncol=3))
@@ -290,16 +338,13 @@ flakes_clustered_cats_long %>%
                            theme(legend.key.size = unit(0.4,"line"),
                                  legend.key.width = unit(0.2,"line"),
                                  legend.key.height = unit(0.4,"line"),
-                                 legend.text = element_text(size=8)))) 
-
-# get legend labels so we know what variable is plotted
-# in each plot, not sure why I can't do this with map
-for(i in 1:nrow(categorical_plots)){
-  categorical_plots$plot[[i]] <- 
-    categorical_plots$plot[[i]] + guides(fill=guide_legend(title=unique(categorical_plots$variable)[i]))
-}
+                                 legend.text = element_text(size=8), 
+                                 legend.title = element_blank()) +
+        ggtitle(str_glue('{variable}'))))
+   
 
 # arrange and draw the plots
+categorical_plots_arranged <- 
 cowplot::plot_grid(plotlist = categorical_plots$plot,
                    align = "hv",
                    axis = "tblr")
