@@ -10,6 +10,8 @@ output:
 
 ```{r setup-flake-size, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+# Nature’s standard figure sizes are 89 mm (single column) and 183 mm (double column)
+ # https://www.nature.com/nature/for-authors/formatting-guide
 ```
 
 THe reviewers ask:
@@ -78,10 +80,15 @@ ggplot(flakes_clustered,
   geom_histogram(aes(fill = factor(cluster))) +
   scale_fill_viridis_d(name = "Size class") +
   theme_minimal() +
-  xlab("Mass (g)") 
-
-
-
+  xlab("Mass (g)")  +
+  coord_equal(ratio = 0.2) +
+  theme(legend.position = c(.75, .75),
+        legend.direction = "horizontal",
+        legend.key.size = unit(0.6,"line"),
+        legend.key.width = unit(0.6,"line"),
+        legend.key.height = unit(0.6,"line"),
+        legend.text = element_text(size=8),
+        legend.box.background = element_rect(fill = "white", colour = "white"))
 ```
 
 Now let's see how some of the key variables change accross these size clusters:
@@ -112,13 +119,30 @@ flakes_clustered %>%
   select_if(is.numeric) %>% 
   filter(cortex_percentage < 20) %>% 
   gather(variable, value, -cluster) %>% 
+  mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
   filter(!is.na(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
   ggplot(aes(cluster,
              value)) +
   geom_boxplot() +
   facet_wrap( ~ variable, scales = "free_y") +
+  xlab("Size class") +
+  ylab("") +
   theme_minimal()
+
+figure_one <- 
+cowplot::plot_grid(flake_hist_with_clusters, 
+                   flakes_clustered_numeric_vars_low_cortex_plot,
+                   labels = "AUTO", 
+                   ncol = 1, 
+                   align = 'v', 
+                   axis = 'lr', 
+                   rel_heights = c(0.5, 1.5)) # 
+
+save_plot("analysis/report/figure_one.png", figure_one,
+          base_aspect_ratio = 1, 
+          base_height = 8,
+          base_width = 18.3/2.5)
 ```
 
 Platform thickness decreases, width at 50% and 75% does not increase as much as width at 25% suggesting a slight increase in triangular-shaped flakes over parallel-sided flakes as the flakes get larger. 
@@ -323,11 +347,27 @@ flakes_clustered_cats_long %>%
                             geom_col() +
                             xlab("") +
                             ylab("%") +
+                       theme_minimal(base_size = 8) +
                            theme(legend.key.size = unit(0.4,"line"),
                                  legend.key.width = unit(0.4,"line"),
                                  legend.key.height = unit(0.4,"line"),
                                  legend.text = element_text(size=8), 
-                                 legend.title = element_blank()) +
+                                 legend.title = element_blank(),
+                                 legend.margin=margin(t=-0.5, 
+                                                      r=-0.5, 
+                                                      b=-0.5, 
+                                                      l=-0.1, 
+                                                      unit="cm"),
+                                 legend.box.margin=margin(-0.1,
+                                                          -0.1,
+                                                          -0.1,
+                                                          -0.3,
+                                                          unit="cm"),
+                                 plot.margin = unit(x = c(0.5, 
+                                                          0, 
+                                                          0,
+                                                          0.5), 
+                                                    units = "cm")) +
                             ggtitle(str_glue('{.y}'))))
    
 
@@ -335,10 +375,26 @@ flakes_clustered_cats_long %>%
 categorical_plots_arranged <- 
 cowplot::plot_grid(plotlist = categorical_plots$plot,
                    align = "hv",
-                   axis = "tblr")
+                   axis = "tblr",
+                   ncol = 2)
+
+save_plot("analysis/report/figure_two.png", categorical_plots_arranged,
+          base_aspect_ratio = 1,
+          base_height = 8,
+          base_width = 18.3/2.5
+)
 
 ```
 
+A closer look at the distribution of retouch types by size classes
+
+```{r}
+flakes_clustered_cats_long %>% 
+  filter(variable == "Retouch type") %>% 
+  ggplot(aes(value, prop)) +
+  geom_col() +
+  facet_wrap( ~ cluster , ncol = 1)
+```
 
 
 
