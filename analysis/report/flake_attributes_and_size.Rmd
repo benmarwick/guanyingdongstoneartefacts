@@ -71,6 +71,17 @@ ggplot(flakes_clustered,
           length,
           colour = factor(cluster)))+
   geom_point()
+
+flake_hist_with_clusters <- 
+ggplot(flakes_clustered,
+       aes(mass)) +
+  geom_histogram(aes(fill = factor(cluster))) +
+  scale_fill_viridis_d(name = "Size class") +
+  theme_minimal() +
+  xlab("Mass (g)") 
+
+
+
 ```
 
 Now let's see how some of the key variables change accross these size clusters:
@@ -275,6 +286,16 @@ flakes_clustered_cats %>%
          variable != "type2c",
          variable != "type2b",
          variable != "box") %>% 
+  mutate(variable = case_when(
+    variable == 'type1' ~ "Flake type",
+    variable == 'type2a' ~ "Retouch type",
+    variable == 'cortex_location' ~ "Cortex location",
+    variable == 'cortex_texture' ~ "Cortex texture",
+    variable == 'initiation' ~ "Initiation",
+    variable == 'material' ~ "Raw material",
+    variable == 'platform' ~ "Platform type",
+    variable == 'platform_shape' ~ "Platform shape",
+    TRUE ~ variable)) %>% 
   mutate(value = str_squish(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
   group_by(cluster, variable, value) %>% 
@@ -284,63 +305,30 @@ flakes_clustered_cats %>%
   mutate(prop = n / sum(n) * 100) 
 ```
 
-Less ideal plot
 
-```{r}
-library(gridExtra)
-out <- by(data = flakes_clustered_cats_long, 
-          INDICES = flakes_clustered_cats_long$variable, 
-          FUN = function(m) {
-      m <- droplevels(m)
-      m <- ggplot(m, aes(cluster, 
-                         prop, 
-                         group=1, 
-                         fill = value)) + 
-         geom_col() +
-         xlab("") +
-        theme(legend.text=element_text(size = 5),
-              legend.key.size = unit(0.2,"line"),
-              legend.key.width = unit(0.2,"line"),
-              legend.key.height = unit(0.2,"line"),
-              legend.title = element_blank()) +
-        ggtitle(str_glue('{m$variable}'))
-   })
-
-# do.call(grid.arrange, out)
-
-# this will line them up nicely
-categorical_plots_arranged <- 
-cowplot::plot_grid(plotlist = out,
-                   align = "hv",
-                   axis = "tblr")
-
-# order of items is
-# unique(flakes_clustered_cats_long$variable)
-
-# If you want to supply the parameters to grid.arrange
-# do.call(grid.arrange, c(out, ncol=3))
-```
-
-This plot is more flexible
+Here is the plot
 
 ```{r}
 categorical_plots <- 
 flakes_clustered_cats_long %>% 
   ungroup(cluster) %>% 
   nest(-variable) %>% 
-  mutate(plot = map(data , ~.x %>%  
+  mutate(plot = map2(data,
+                     variable, ~.x %>%  
                             ggplot(aes(cluster, 
                                           prop, 
                                           group=1, 
                                           fill = value)) + 
+                       scale_fill_viridis_d() +
                             geom_col() +
                             xlab("") +
+                            ylab("%") +
                            theme(legend.key.size = unit(0.4,"line"),
-                                 legend.key.width = unit(0.2,"line"),
+                                 legend.key.width = unit(0.4,"line"),
                                  legend.key.height = unit(0.4,"line"),
                                  legend.text = element_text(size=8), 
                                  legend.title = element_blank()) +
-        ggtitle(str_glue('{variable}'))))
+                            ggtitle(str_glue('{.y}'))))
    
 
 # arrange and draw the plots
@@ -351,10 +339,6 @@ cowplot::plot_grid(plotlist = categorical_plots$plot,
 
 ```
 
-Some observations on the categorical variables:
-
-- Larger flakes tend not to have any cortex on the platform, and more on the distal end of the flake.
-- 
 
 
 
