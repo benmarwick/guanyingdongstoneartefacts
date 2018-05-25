@@ -139,7 +139,7 @@ cowplot::plot_grid(flake_hist_with_clusters,
                    axis = 'lr', 
                    rel_heights = c(0.5, 1.5)) # 
 
-save_plot("analysis/report/figure_one.png", figure_one,
+save_plot("analysis/report/Extended_Data_Figure_X.png", figure_one,
           base_aspect_ratio = 1, 
           base_height = 8,
           base_width = 18.3/2.5)
@@ -451,7 +451,7 @@ cowplot::plot_grid(plotlist = categorical_plots$plot,
                    axis = "tblr",
                    ncol = 2)
 
-save_plot("analysis/report/figure_two.png", categorical_plots_arranged,
+save_plot("analysis/report/Extended_Data_Figure_Y.png", categorical_plots_arranged,
           base_aspect_ratio = 1,
           base_height = 8,
           base_width = 18.3/2.5

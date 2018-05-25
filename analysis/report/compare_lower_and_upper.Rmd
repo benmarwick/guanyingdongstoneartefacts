@@ -412,7 +412,7 @@ plot_grid(upper_lower_metric_plots,
                    axis = 'lr', 
                rel_widths  = c(0.33, 0.66))
 
-save_plot("analysis/report/figure_three.png",
+save_plot("analysis/report/Extended_Data_Figure_Z.png",
           upper_lower_combo_plot,
           base_aspect_ratio = 1,
           base_height = 8,
