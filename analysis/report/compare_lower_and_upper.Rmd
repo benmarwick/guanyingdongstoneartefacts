@@ -74,6 +74,7 @@ flakes %>%
 Flake metrics:
 
 ```{r}
+upper_lower_metric_plots <- 
 flakes %>% 
   filter(!is.na(layer)) %>% 
   select(which(sapply(., class) == "numeric"), layer) %>% 
@@ -85,10 +86,17 @@ flakes %>%
   ggplot(aes(layer,
              value)) +
   geom_boxplot() +
-  facet_wrap( ~ variable, scales = "free_y") +
+  facet_wrap( ~ variable, scales = "free_y",
+              ncol = 2) +
   xlab("Size class") +
   ylab("") +
-  theme_minimal()
+  theme_minimal(base_size = 8)
+
+save_plot("analysis/report/figure_three.png", upper_lower_metric_plots,
+          base_aspect_ratio = 1,
+          base_height = 4,
+          base_width = 18.3/2.5
+)
 ```
 
 Flake technological attributes
@@ -161,21 +169,21 @@ upper_lower_flakes_cats_flake_types %>%
  tally(sort = TRUE)
 
 # for plotting
-flakes_clustered_cats_flake_types <- 
-flakes_clustered_cats_flake_types %>% 
+upper_lower_flakes_cats_flake_types <- 
+upper_lower_flakes_cats_flake_types %>% 
  rename(`Flake type` = type1) %>% 
- group_by(`Flake type`, cluster) %>% 
+ group_by(`Flake type`, layer) %>% 
  tally(sort = TRUE)
 
 # retouch type -----------------------------------------------------------------
 
 # type 2, special case , retouch types
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(type2) %>% 
  tally(sort = TRUE)
 
-flakes_clustered_cats_retouch_type <- 
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats_retouch_type <- 
+upper_lower_flakes_cats %>% 
  separate(type2, into = c("type2a", "type2b", "type2c"), sep = ",") %>% 
   mutate(type2a = if_else(str_detect(type2a, "lvf"), "levallois", type2a)) %>% 
   mutate(type2a = if_else(str_detect(type2a, "ret"), "retouch", type2a)) %>% 
@@ -188,31 +196,31 @@ flakes_clustered_cats %>%
   mutate(type2a = if_else(str_detect(type2a, "dent"), "denticulate", type2a)) %>% 
   mutate(type2a = if_else(str_detect(type2a, "scp"), "scraper", type2a)) %>% 
   mutate(type2a = str_squish(type2a))  %>% 
-  mutate(type2a = fct_lump(type2a, 7)) %>% 
+  mutate(type2a = fct_lump(type2a, 6)) %>% 
   filter(!is.na(type2a)) 
 
 # check it
-flakes_clustered_cats_retouch_type %>% 
+upper_lower_flakes_cats_retouch_type %>% 
  group_by(type2a) %>% 
  tally(sort = TRUE)
 
 # for plotting
-flakes_clustered_cats_retouch_type <- 
-flakes_clustered_cats_retouch_type %>% 
+upper_lower_flakes_cats_retouch_type <- 
+upper_lower_flakes_cats_retouch_type %>% 
  rename(`Retouch type` = type2a ) %>% 
- group_by(`Retouch type`, cluster) %>% 
+ group_by(`Retouch type`, layer) %>% 
  tally(sort = TRUE)
   
 
 # platform type -----------------------------------------------------------------
 
 # Platform, ok
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(platform) %>% 
  tally(sort = TRUE)
 
-flakes_clustered_cats_platform_type  <- 
-  flakes_clustered_cats %>% 
+upper_lower_flakes_cats_platform_type  <- 
+  upper_lower_flakes_cats %>% 
    mutate(platform = if_else(str_detect(platform, "facet"), "facetted", platform)) %>% 
    mutate(platform = if_else(str_detect(platform, "cotex|cortex"), "cortex", platform)) %>%
    mutate(platform = fct_lump(platform, 6)) %>% 
@@ -220,23 +228,23 @@ flakes_clustered_cats_platform_type  <-
 
 
 # for plotting
-flakes_clustered_cats_platform_type <- 
-flakes_clustered_cats_platform_type %>% 
+upper_lower_flakes_cats_platform_type <- 
+upper_lower_flakes_cats_platform_type %>% 
  rename(`Platform type` = platform ) %>% 
- group_by(`Platform type`, cluster) %>% 
+ group_by(`Platform type`, layer) %>% 
  tally(sort = TRUE)
   
 
 # platform shape -----------------------------------------------------------------
 
 # platform shape, ok
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(platform_shape) %>% 
  tally(sort = TRUE)
 
 
-flakes_clustered_cats_platform_shape <- 
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats_platform_shape <- 
+upper_lower_flakes_cats %>% 
   mutate(platform_shape = if_else(platform_shape == "sb", "quadrangle", platform_shape)) %>%
   mutate(platform_shape = if_else(platform_shape == "cdg", "chapeau de gendarme", platform_shape)) %>%
   mutate(platform_shape = if_else(platform_shape == "sx", "rhombus", platform_shape)) %>%
@@ -244,36 +252,36 @@ flakes_clustered_cats %>%
   filter(!is.na(platform_shape))
 
 # for plotting
-flakes_clustered_cats_platform_shape <- 
-flakes_clustered_cats_platform_shape %>% 
+upper_lower_flakes_cats_platform_shape <- 
+upper_lower_flakes_cats_platform_shape %>% 
  rename(`Platform shape` = platform_shape ) %>% 
- group_by(`Platform shape`, cluster) %>% 
+ group_by(`Platform shape`, layer) %>% 
  tally(sort = TRUE)
  
 # cortex texture-----------------------------------------------------------------
  
 # cortex texture, ok 
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(cortex_texture) %>% 
  tally(sort = TRUE)
 
 # for plotting
-flakes_clustered_cats_cortex_texture <- 
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats_cortex_texture <- 
+upper_lower_flakes_cats %>% 
  rename(`Cortex texture` = cortex_texture ) %>% 
- group_by(`Cortex texture`, cluster) %>% 
+ group_by(`Cortex texture`, layer) %>% 
  filter(!is.na(`Cortex texture` )) %>% 
  tally(sort = TRUE)
 
 # cortex location-----------------------------------------------------------------
  
 # cortex location, ok
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(cortex_location) %>% 
  tally(sort = TRUE)
 
-flakes_clustered_cats_cortex_location <- 
-  flakes_clustered_cats %>% 
+upper_lower_flakes_cats_cortex_location <- 
+  upper_lower_flakes_cats %>% 
    mutate(cortex_location = if_else(str_detect(cortex_location, "prox"), 
                                     "proximal", 
                                     cortex_location)) %>%
@@ -281,86 +289,79 @@ flakes_clustered_cats_cortex_location <-
   filter(!is.na(cortex_location),
          cortex_location != "vent")
 
-flakes_clustered_cats_cortex_location <- 
-flakes_clustered_cats_cortex_location %>% 
+upper_lower_flakes_cats_cortex_location <- 
+upper_lower_flakes_cats_cortex_location %>% 
  rename(`Cortex location` = cortex_location ) %>% 
- group_by(`Cortex location`, cluster) %>% 
+ group_by(`Cortex location`, layer) %>% 
  filter(!is.na(`Cortex location` )) %>% 
  tally(sort = TRUE)
 
 # cortex location-----------------------------------------------------------------
 
 # initiation, ok 
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(initiation) %>% 
  tally(sort = TRUE)
 
-flakes_clustered_cats_initiation <- 
-  flakes_clustered_cats %>% 
+upper_lower_flakes_cats_initiation <- 
+  upper_lower_flakes_cats %>% 
    mutate(initiation = fct_lump(initiation, 3))
 
-flakes_clustered_cats_initiation <- 
-flakes_clustered_cats_initiation %>% 
+upper_lower_flakes_cats_initiation <- 
+upper_lower_flakes_cats_initiation %>% 
  rename(`Initiation` = initiation ) %>% 
- group_by(`Initiation`, cluster) %>% 
- filter(!is.na(`Initiation` )) %>% 
+ group_by(`Initiation`, layer) %>% 
+ filter(!is.na(`Initiation` ))%>% 
  tally(sort = TRUE)
 
 # cortex location-----------------------------------------------------------------
 
 # platform preparation, ok, ignore, no meaningful info in here
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(platform_preparation) %>% 
  tally(sort = TRUE)
-
-flakes_clustered_cats <- 
-  flakes_clustered_cats %>% 
-   mutate(platform_preparation = if_else(str_detect(platform_preparation, "fac"), "facetted", platform_preparation)) %>% 
-   mutate(platform_preparation = fct_lump(platform_preparation, 3))
-
 ```
 
 Try for a nice plot, we have separate dataframes for each variable. 
 
 ```{r}
-list_of_dfs <- list(flakes_clustered_cats_retouch_type,
-                    flakes_clustered_cats_raw_material,
-                    flakes_clustered_cats_platform_type,
-                    flakes_clustered_cats_platform_shape,
-                    flakes_clustered_cats_initiation,
-                    flakes_clustered_cats_flake_types,
-                    flakes_clustered_cats_cortex_texture,
-                    flakes_clustered_cats_cortex_location)
+upper_lower_list_of_dfs <- list(upper_lower_flakes_cats_retouch_type,
+                    upper_lower_flakes_cats_raw_material,
+                    upper_lower_flakes_cats_platform_type,
+                    upper_lower_flakes_cats_platform_shape,
+                    upper_lower_flakes_cats_initiation,
+                    upper_lower_flakes_cats_flake_types,
+                    upper_lower_flakes_cats_cortex_texture,
+                    upper_lower_flakes_cats_cortex_location)
 
-map_dfr(list_of_dfs, ~nest(.x))
 
-all_the_categorical_variables <- 
-  map_dfr(list_of_dfs, 
-          ~gather(.x, variable, value, -cluster, -n))
+upper_lower_all_the_categorical_variables <- 
+  map_dfr(upper_lower_list_of_dfs, 
+          ~gather(.x, variable, value, -layer, -n))
 
 # Compute proportions per category
 
-flakes_clustered_cats_long <- 
-all_the_categorical_variables %>% 
+upper_lower_flakes_cats_long <- 
+upper_lower_all_the_categorical_variables %>% 
   mutate(value = str_squish(value)) %>% 
-  mutate(cluster = factor(cluster)) %>% 
-  group_by(cluster, variable) %>%  
+  mutate(layer = factor(layer)) %>% 
+  group_by(layer, variable) %>%  
   mutate(prop = n / sum(n) * 100)  %>% 
-  arrange(cluster, variable)
+  arrange(layer, variable)
 ```
 
 
 Here is the plot
 
 ```{r}
-categorical_plots <- 
-flakes_clustered_cats_long %>% 
-  ungroup(cluster) %>% 
+upper_lower_categorical_plots <- 
+upper_lower_flakes_cats_long %>% 
+  ungroup(layer) %>% 
   nest(-variable) %>% 
   mutate(data = map(data, ~.x %>% mutate(value = as.character(value)))) %>% 
   mutate(plot = map2(data,
                      variable, ~.x %>%  
-                            ggplot(aes(cluster, 
+                            ggplot(aes(layer, 
                                           prop, 
                                           fill = value)) + 
                        scale_fill_viridis_d() +
@@ -379,31 +380,44 @@ flakes_clustered_cats_long %>%
                                                       l=-0.1, 
                                                       unit="cm"),
                                  legend.box.margin=margin(-0.1,
+                                                          -0.5,
                                                           -0.1,
-                                                          -0.1,
-                                                          -0.3,
-                                                          unit="cm"),
-                                 plot.margin = unit(x = c(0.5, 
-                                                          0, 
                                                           0,
+                                                          unit="cm"),
+                                 plot.margin = unit(x = c(0, 
+                                                          0.5, 
+                                                          -0.1,
                                                           0.5), 
                                                     units = "cm")) +
                             ggtitle(str_glue('{.y}'))))
    
 
 # arrange and draw the plots
-categorical_plots_arranged <- 
-cowplot::plot_grid(plotlist = categorical_plots$plot,
+upper_lower_categorical_plots_arranged <- 
+cowplot::plot_grid(plotlist = upper_lower_categorical_plots$plot,
                    align = "hv",
                    axis = "tblr",
                    ncol = 2)
+```
 
-save_plot("analysis/report/figure_two.png", categorical_plots_arranged,
+Combine plots of flake metrics and technological variables
+
+```{r}
+upper_lower_combo_plot <- 
+plot_grid(upper_lower_metric_plots, 
+          upper_lower_categorical_plots_arranged,
+           labels = "AUTO", 
+                   ncol = 2, 
+                   align = 'v', 
+                   axis = 'lr', 
+               rel_widths  = c(0.33, 0.66))
+
+save_plot("analysis/report/figure_three.png",
+          upper_lower_combo_plot,
           base_aspect_ratio = 1,
           base_height = 8,
           base_width = 18.3/2.5
 )
-
 ```
 
 

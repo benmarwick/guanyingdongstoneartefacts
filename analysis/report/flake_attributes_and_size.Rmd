@@ -373,7 +373,7 @@ flakes_clustered_cats <-
 
 ```
 
-Try for a nice plot, we have separate dataframes for each variable. 
+Make a nice panel plot, we have separate dataframes for each variable. 
 
 ```{r}
 list_of_dfs <- list(flakes_clustered_cats_retouch_type,
@@ -457,6 +457,16 @@ save_plot("analysis/report/figure_two.png", categorical_plots_arranged,
           base_width = 18.3/2.5
 )
 
+```
+
+A closer look at the distribution of retouch types by size classes
+
+```{r eval=FALSE}
+flakes_clustered_cats_long %>% 
+  filter(variable == "Retouch type") %>% 
+  ggplot(aes(value, prop)) +
+  geom_col() +
+  facet_wrap( ~ cluster , ncol = 1)
 ```
 
 A closer look at the distribution of retouch types by size classes
