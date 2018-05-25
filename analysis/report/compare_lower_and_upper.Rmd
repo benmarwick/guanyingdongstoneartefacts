@@ -1,6 +1,6 @@
 ---
-title: "Guanyingdong Stone Artefact Assemblage Report: Variation by Size"
-author: "HY and BM"
+title: "Guanyingdong Stone Artefact Assemblage Report: Compare artefacts from upper and lower parts of the deposit"
+author: "HY and .BM"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
    bookdown::word_document2:
@@ -14,156 +14,101 @@ knitr::opts_chunk$set(echo = TRUE)
  # https://www.nature.com/nature/for-authors/formatting-guide
 ```
 
-THe reviewers ask:
+Get the basic flake details, run from L454 of hu_artefacts_report.Rmd, then, we are checking for differences between  upper and lower
 
->  can they offer other data that might elucidate changes in flaking type with reduction, e.g. changes in flake attributes that correlate with size declines?
+# Counts
 
-
-Read in the data, deal with dupicates, get the basic flake details, run from L454 of hu_artefacts_report.Rmd
-
-Let's see if there are any natural groupings in flake mass:
+Altogether:
 
 ```{r}
-
-flake_hist_1 <- 
-ggplot(flakes,
-       aes(mass)) +
-  geom_histogram() +
-  theme_minimal() +
-  xlab("Mass (g)")
-
-flake_hist_2 <- 
-ggplot(flakes,
-       aes(mass)) +
-  geom_histogram() +
-  theme_minimal() +
-  scale_x_log10() +
-  xlab("Mass (g)")
-
-
-library(cowplot)
-flake_mass_distributions <- plot_grid(flake_hist_1, flake_hist_2, ncol = 1)
-```
-
-Nothing obvious, let's try a little clustering. We will try univariate clustering:
-
-```{r}
-require(Ckmeans.1d.dp)
-result <- Ckmeans.1d.dp(flakes$mass[!is.na(flakes$mass)])
-plot(result)
-
-n_clusters <- length(result$size)
-n_clusters_30 <- length(result$size[result$size > 30])
-
-# assign cluster ID to table
-flakes_clustered <- 
 flakes %>% 
-  filter(!is.na(mass)) %>% 
-  mutate(cluster = result$cluster) %>% 
-  right_join(flakes) %>% 
-  filter(cluster %in% 1:n_clusters_30)
+  select(layer) %>% 
+  bind_rows(cores %>% 
+              select(layer)) %>% 
+  group_by(layer) %>% 
+  tally() %>% 
+  mutate(perc = n / sum(n) * 100)
 ```
 
-
-We get `r n_clusters` clusters, with `r n_clusters_30` that have more than 30 artefacts in them
+Flakes:
 
 ```{r}
-ggplot(flakes_clustered,
-       aes(mass, 
-          length,
-          colour = factor(cluster)))+
-  geom_point()
-
-flake_hist_with_clusters <- 
-ggplot(flakes_clustered,
-       aes(mass)) +
-  geom_histogram(aes(fill = factor(cluster))) +
-  scale_fill_viridis_d(name = "Size class") +
-  theme_minimal() +
-  xlab("Mass (g)")  +
-  coord_equal(ratio = 0.2) +
-  theme(legend.position = c(.75, .75),
-        legend.direction = "horizontal",
-        legend.key.size = unit(0.6,"line"),
-        legend.key.width = unit(0.6,"line"),
-        legend.key.height = unit(0.6,"line"),
-        legend.text = element_text(size=8),
-        legend.box.background = element_rect(fill = "white", colour = "white"))
+flakes %>% 
+  group_by(layer) %>% 
+  tally() %>% 
+  mutate(perc = n / sum(n) * 100)
 ```
 
-Now let's see how some of the key variables change accross these size clusters:
+Cores:
 
 ```{r}
-library(stringr)
-flakes_clustered_numeric_vars_plot <- 
-flakes_clustered %>% 
-  select_if(is.numeric) %>% 
-  gather(variable, value, -cluster) %>% 
-  filter(!is.na(value)) %>% 
-  mutate(cluster = factor(cluster)) %>% 
-  mutate(variable = str_replace_all(variable, "_", " ")) %>% 
-  ggplot(aes(cluster,
-             value)) +
-  geom_boxplot(position = position_dodge2(preserve = "total")) +
-  facet_wrap( ~ variable, scales = "free_y") +
-  theme_minimal(base_size = 8)
+cores %>% 
+  group_by(layer) %>% 
+  tally() %>% 
+  mutate(perc = n / sum(n) * 100)
 ```
 
-We see that some dimensions don't increase with size. Platform thickness decreases a little, as mass goes up, platform width becomes more variable. Scar numbers have less high outliers as size increases. 
+In the main text we write: "Among these, 5 were identified as Levallois, and 3 of them (including 2 cores and 1 flake) are from Group A and 2 (1 flake and 1 tool) are from Group B."
 
-What if we just look at flakes with very little cortex, and thus exclude the primary reduction flakes:
+upper - Group A: 2 cores and 1 flake
+lower - Group B: 0 cores and 1 flake and 1 tool
+
+HY says the Levallois artefacts are coded LVF in the type1 column. But we don't have any that are coded with upper/lower in the layer column. So I need some advice about exactly which they are. 
+
+HY says:
+
+P5348 is from the upper [but not labelled in the spreadsheet]
+P5306 is from the lower, is a levallois tool, because it is retouched
+P5366 is from the lower, is a levallois flake
+
 
 ```{r}
-flakes_clustered_numeric_vars_low_cortex_plot <- 
-flakes_clustered %>% 
-  select_if(is.numeric) %>% 
+flakes %>% 
+  filter(layer %in% c('lower', 'upper')) %>% 
+  group_by(layer, type1) %>% 
+  tally()
+```
+
+# Technological and metric comparisons
+
+Flake metrics:
+
+```{r}
+flakes %>% 
+  filter(!is.na(layer)) %>% 
+  select(which(sapply(., class) == "numeric"), layer) %>% 
   filter(cortex_percentage < 20) %>% 
-  gather(variable, value, -cluster) %>% 
+  gather(variable, value, -layer) %>% 
   mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
   filter(!is.na(value)) %>% 
-  mutate(cluster = factor(cluster)) %>% 
-  ggplot(aes(cluster,
+  mutate(layer = factor(layer)) %>% 
+  ggplot(aes(layer,
              value)) +
   geom_boxplot() +
   facet_wrap( ~ variable, scales = "free_y") +
   xlab("Size class") +
   ylab("") +
   theme_minimal()
-
-figure_one <- 
-cowplot::plot_grid(flake_hist_with_clusters, 
-                   flakes_clustered_numeric_vars_low_cortex_plot,
-                   labels = "AUTO", 
-                   ncol = 1, 
-                   align = 'v', 
-                   axis = 'lr', 
-                   rel_heights = c(0.5, 1.5)) # 
-
-save_plot("analysis/report/figure_one.png", figure_one,
-          base_aspect_ratio = 1, 
-          base_height = 8,
-          base_width = 18.3/2.5)
 ```
 
-Platform thickness decreases, width at 50% and 75% does not increase as much as width at 25% suggesting a slight increase in triangular-shaped flakes over parallel-sided flakes as the flakes get larger. 
+Flake technological attributes
 
-How about the categorical variables?
+
 
 ```{r}
 
-flakes_categorical <- 
-flakes_clustered %>% 
-  filter(cortex_percentage < 20) %>% 
+upper_lower_flakes_categorical <- 
+flakes %>% 
   select_if(function(col) is.character(col) | 
-                                   all(col == .$cluster)) %>% 
-  select(-one_of(c("bag", "layer", "Li_classifi", "note", "number"))) %>% 
-  gather(variable, value, -cluster) %>% 
-  mutate(cluster = factor(cluster)) %>% 
+                                   all(col == .$layer)) %>% 
+  select(-one_of(c("bag",  "Li_classifi", "note", "number"))) %>% 
+  gather(variable, value, -layer) %>% 
+  mutate(layer = factor(layer)) %>% 
   filter(!is.na(value)) %>% 
-  group_by(cluster, variable, value) %>% 
+  group_by(layer, variable, value) %>% 
   tally() %>% 
   ungroup() %>% 
-  group_by(cluster, variable) %>%  
+  group_by(layer, variable) %>%  
   mutate(prop = n / sum(n) * 100) 
 
 
@@ -171,34 +116,36 @@ flakes_clustered %>%
 library(stringr)
 library(forcats)
 
-flakes_clustered_cats <- 
-flakes_clustered %>% 
+upper_lower_flakes_cats <- 
+flakes %>% 
   select_if(function(col) is.character(col) | 
-                                   all(col == .$cluster)) %>% 
-   select(-one_of(c("bag", "Li_classifi", "note", "number")))
+                                   all(col == .$layer)) %>% 
+   select(-one_of(c("bag", "Li_classifi", "note", "number"))) %>% 
+  filter(!is.na(layer))
+
 
 # raw material -----------------------------------------------------------------
 # material, ok
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(material) %>% 
  tally(sort = TRUE)
 
 # make table for plotting
-flakes_clustered_cats_raw_material <- 
-flakes_clustered_cats %>% 
-  rename(`Raw material` = material) %>% 
- group_by(`Raw material` , cluster) %>% 
+upper_lower_flakes_cats_raw_material <- 
+upper_lower_flakes_cats %>% 
+rename(`Raw material` = material) %>% 
+ group_by(`Raw material` , layer) %>% 
  tally(sort = TRUE)
 
 # flake type -----------------------------------------------------------------
 
 # type1, ok
-flakes_clustered_cats %>% 
+upper_lower_flakes_cats %>% 
  group_by(type1) %>% 
  tally(sort = TRUE)
 
-flakes_clustered_cats_flake_types <- 
-  flakes_clustered_cats %>% 
+upper_lower_flakes_cats_flake_types <- 
+  upper_lower_flakes_cats %>% 
   mutate(type1 = if_else(str_detect(type1, "lvf"), "Levallois", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "ret"), "retouch", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "blade|bld"), "blade", type1)) %>% 
@@ -206,10 +153,10 @@ flakes_clustered_cats_flake_types <-
   mutate(type1 = if_else(str_detect(type1, "dbd"), "débordant", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "kbw"), "Kombewa", type1)) %>% 
   mutate(type1 = if_else(str_detect(type1, "end"), "end scraper", type1)) %>% 
-  mutate(type1 = fct_lump(type1, 5))
+  mutate(type1 = fct_lump(type1, 2))
 
 # check again
-flakes_clustered_cats_flake_types %>% 
+upper_lower_flakes_cats_flake_types %>% 
  group_by(type1) %>% 
  tally(sort = TRUE)
 
@@ -459,84 +406,6 @@ save_plot("analysis/report/figure_two.png", categorical_plots_arranged,
 
 ```
 
-A closer look at the distribution of retouch types by size classes
 
-```{r eval=FALSE}
-flakes_clustered_cats_long %>% 
-  filter(variable == "Retouch type") %>% 
-  ggplot(aes(value, prop)) +
-  geom_col() +
-  facet_wrap( ~ cluster , ncol = 1)
-```
-
-
-
-Try this on the Lev flakes only:
-
-```{r  eval=FALSE}
-flakes_clustered %>% 
-  select_if(function(col) is.numeric(col) | 
-                                   all(col == .$type1))  %>% 
-  filter(str_detect(type1, "LV|leva")) %>% 
-    select(-box, -type1) %>% 
-  gather(variable, value, -cluster) %>% 
-  filter(!is.na(value)) %>% 
-  mutate(cluster = factor(cluster)) %>% 
-  ggplot(aes(cluster,
-             value)) +
-  geom_boxplot() +
-  facet_wrap( ~ variable, scales = "free_y") +
-  theme_minimal()
-```
-
-
-```{r  eval=FALSE}
-flakes_clustered_cats_long_leva <- 
-flakes_clustered_cats %>% 
-  filter(type1 %in% c("levallois", "LVF")) %>% 
-  gather(variable, value, -cluster)  %>% 
-  filter(!is.na(value), 
-         variable != "comment",
-         variable != "heat_damage",
-         variable != "platform_preparation",
-         variable != "type2c") %>% 
-  mutate(value = str_squish(value)) %>% 
-  mutate(cluster = factor(cluster)) %>% 
-  group_by(cluster, variable, value) %>% 
-  tally() %>% 
-  ungroup() %>% 
-  group_by(cluster, variable) %>%  
-  mutate(prop = n / sum(n) * 100)  
-
-categorical_plots_leva <- 
-flakes_clustered_cats_long_leva %>% 
-  ungroup(cluster) %>% 
-  nest(-variable) %>% 
-  mutate(plot = map(data , ~.x %>%  
-                            ggplot(aes(cluster, 
-                                          prop, 
-                                          group=1, 
-                                          fill = value)) + 
-                            geom_col() +
-                            xlab("") +
-                           theme(legend.key.size = unit(0.4,"line"),
-                                 legend.key.width = unit(0.2,"line"),
-                                 legend.key.height = unit(0.4,"line"),
-                                 legend.text = element_text(size=8)))) 
-
-# get legend labels so we know what variable is plotted
-# in each plot, not sure why I can't do this with map
-for(i in 1:nrow(categorical_plots_leva)){
-  categorical_plots_leva$plot[[i]] <- 
-    categorical_plots_leva$plot[[i]] + guides(fill=guide_legend(title=unique(categorical_plots_leva$variable)[i]))
-}
-
-# arrange and draw the plots
-cowplot::plot_grid(plotlist = categorical_plots_leva$plot,
-                   align = "hv",
-                   axis = "tblr")
-
-
-```
-
+Compare cores from upper and lower
 
