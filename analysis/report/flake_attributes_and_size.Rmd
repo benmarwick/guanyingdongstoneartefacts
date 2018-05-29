@@ -111,15 +111,13 @@ flakes_clustered %>%
 
 We see that some dimensions don't increase with size. Platform thickness decreases a little, as mass goes up, platform width becomes more variable. Scar numbers have less high outliers as size increases. 
 
-What if we just look at flakes with very little cortex, and thus exclude the primary reduction flakes:
-
 ```{r}
 flakes_clustered_numeric_vars_low_cortex_plot <- 
 flakes_clustered %>% 
-  select_if(is.numeric) %>% 
-  filter(cortex_percentage < 20) %>% 
+  select_if(is.numeric) %>%
   gather(variable, value, -cluster) %>% 
   mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
+  mutate(variable = str_replace_all(variable, "%", "% ")) %>% 
   filter(!is.na(value)) %>% 
   mutate(cluster = factor(cluster)) %>% 
   ggplot(aes(cluster,
@@ -153,7 +151,6 @@ How about the categorical variables?
 
 flakes_categorical <- 
 flakes_clustered %>% 
-  filter(cortex_percentage < 20) %>% 
   select_if(function(col) is.character(col) | 
                                    all(col == .$cluster)) %>% 
   select(-one_of(c("bag", "layer", "Li_classifi", "note", "number"))) %>% 

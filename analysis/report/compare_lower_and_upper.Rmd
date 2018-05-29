@@ -78,9 +78,9 @@ upper_lower_metric_plots <-
 flakes %>% 
   filter(!is.na(layer)) %>% 
   select(which(sapply(., class) == "numeric"), layer) %>% 
-  filter(cortex_percentage < 20) %>% 
   gather(variable, value, -layer) %>% 
   mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
+  mutate(variable = str_replace_all(variable, "%", "% ")) %>% 
   filter(!is.na(value)) %>% 
   mutate(layer = factor(layer)) %>% 
   ggplot(aes(layer,
@@ -100,8 +100,6 @@ save_plot("analysis/report/figure_three.png", upper_lower_metric_plots,
 ```
 
 Flake technological attributes
-
-
 
 ```{r}
 
