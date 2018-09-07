@@ -19,7 +19,7 @@ THe reviewers ask:
 >  can they offer other data that might elucidate changes in flaking type with reduction, e.g. changes in flake attributes that correlate with size declines?
 
 
-Read in the data, deal with dupicates, get the basic flake details, run from L454 of hu_artefacts_report.Rmd
+Read in the data, deal with dupicates, get the basic flake details, run to L454 of hu_artefacts_report.Rmd, then continue from here. 
 
 Let's see if there are any natural groupings in flake mass:
 
@@ -78,6 +78,7 @@ flake_hist_with_clusters <-
 ggplot(flakes_clustered,
        aes(mass)) +
   geom_histogram(aes(fill = factor(cluster))) +
+  annotate("text", x = 240, y = 120, label = glue::glue('Total number of artefacts in sample: {nrow(flakes_clustered)}')) +
   scale_fill_viridis_d(name = "Size class") +
   theme_minimal() +
   xlab("Mass (g)")  +
@@ -93,44 +94,63 @@ ggplot(flakes_clustered,
 
 Now let's see how some of the key variables change accross these size clusters:
 
-```{r}
-library(stringr)
-flakes_clustered_numeric_vars_plot <- 
-flakes_clustered %>% 
-  select_if(is.numeric) %>% 
-  gather(variable, value, -cluster) %>% 
-  filter(!is.na(value)) %>% 
-  mutate(cluster = factor(cluster)) %>% 
-  mutate(variable = str_replace_all(variable, "_", " ")) %>% 
-  ggplot(aes(cluster,
-             value)) +
-  geom_boxplot(position = position_dodge2(preserve = "total")) +
-  facet_wrap( ~ variable, scales = "free_y") +
-  theme_minimal(base_size = 8)
-```
-
 We see that some dimensions don't increase with size. Platform thickness decreases a little, as mass goes up, platform width becomes more variable. Scar numbers have less high outliers as size increases. 
 
 ```{r}
-flakes_clustered_numeric_vars_low_cortex_plot <- 
+
+# get sample sizes
+flakes_clustered_numeric_vars_sample_sizes <- 
 flakes_clustered %>% 
   select_if(is.numeric) %>%
   gather(variable, value, -cluster) %>% 
   mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
-  mutate(variable = str_replace_all(variable, "%", "% ")) %>% 
   filter(!is.na(value)) %>% 
+  mutate(variable = str_replace_all(variable, "%", "% ")) %>% 
   mutate(cluster = factor(cluster)) %>% 
+  group_by(variable) %>% 
+  tally()
+
+# add measurement units
+flakes_clustered_numeric_vars_sample_sizes$units <- 
+  c("", 
+    "mm, ",
+    "g, ",
+    "mm, ",
+    "mm, ",
+    "mm, ",
+    "mm, ",
+    "mm, ",
+    "",
+    "mm, ",
+    "mm, ",
+    "mm, ",
+    "mm, ",
+    "mm, ",
+    "mm, ")
+
+
+library(stringr)
+flakes_clustered_numeric_vars_plot <- 
+flakes_clustered %>% 
+  select_if(is.numeric) %>%
+  gather(variable, value, -cluster) %>% 
+  mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(variable = str_replace_all(variable, "%", "% ")) %>% 
+  mutate(cluster = factor(cluster)) %>% 
+  left_join(flakes_clustered_numeric_vars_sample_sizes) %>% 
+  # mutate(variable = glue::glue('{variable} ({units}n = {n})')) %>% 
   ggplot(aes(cluster,
              value)) +
   geom_boxplot() +
   facet_wrap( ~ variable, scales = "free_y") +
   xlab("Size class") +
   ylab("") +
-  theme_minimal()
+  theme_minimal(base_size = 8)
 
 figure_one <- 
 cowplot::plot_grid(flake_hist_with_clusters, 
-                   flakes_clustered_numeric_vars_low_cortex_plot,
+                   flakes_clustered_numeric_vars_plot,
                    labels = "AUTO", 
                    ncol = 1, 
                    align = 'v', 
@@ -403,10 +423,19 @@ all_the_categorical_variables %>%
 Here is the plot
 
 ```{r}
+# sample sizes for each variable
+flakes_clustered_cats_sample_sizes <- 
+flakes_clustered_cats_long %>% 
+  group_by(variable) %>% 
+  summarise(tot_n = sum(n))
+
+
 categorical_plots <- 
 flakes_clustered_cats_long %>% 
   ungroup(cluster) %>% 
   nest(-variable) %>% 
+  left_join(flakes_clustered_cats_sample_sizes) %>% 
+ # mutate(variable = glue::glue('{variable} (n = {tot_n})')) %>% 
   mutate(data = map(data, ~.x %>% mutate(value = as.character(value)))) %>% 
   mutate(plot = map2(data,
                      variable, ~.x %>%  

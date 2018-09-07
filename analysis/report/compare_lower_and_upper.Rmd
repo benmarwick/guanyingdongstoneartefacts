@@ -74,6 +74,16 @@ flakes %>%
 Flake metrics:
 
 ```{r}
+# sample sizes
+flakes %>% 
+  filter(!is.na(layer)) %>% 
+  select(which(sapply(., class) == "numeric"), layer) %>% 
+  gather(variable, value, -layer) %>% 
+  mutate(variable = str_to_title(str_replace_all(variable, "_", " "))) %>% 
+  mutate(variable = str_replace_all(variable, "%", "% ")) %>% 
+  filter(!is.na(value)) %>% 
+  filter(variable == 'Mass') %>% nrow()
+
 upper_lower_metric_plots <- 
 flakes %>% 
   filter(!is.na(layer)) %>% 
