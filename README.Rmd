@@ -22,9 +22,9 @@ knitr::opts_chunk$set(
 
 ### Compendium DOI: 
  
-http://dx.doi.org/xxxxxxx
+http://doi.org/10.17605/OSF.IO/ERNTJ
 
-The files at the URL above will generate the results as found in the publication. The files hosted at github.com/benmarwick/guanyingdongstoneartefacts are the development versions and may have changed since the report was published
+The files at the URL above will generate the results as found in the publication. The files hosted at <https://github.com/benmarwick/guanyingdongstoneartefacts> are the development versions and may have changed since the report was published
 
 ### Authors  of this repository:
 
@@ -33,11 +33,11 @@ Hu Yue
 
 ### Published in: 
 
- xxxxx 
+Hu, Y., Marwick, B., Zhang, J. F., Rui, X., Hou, Y. M., Yue, J. P., ... & Li, B. (2019). [Late Middle Pleistocene Levallois stone-tool technology in southwest China](http://faculty.washington.edu/bmarwick/PDFs/Hu-Marwick-Zhang-2018-Levallois-SW-China-paper-SI.pdf). _Nature_, 565(7737), 82.  <https://doi.org/10.1038/s41586-018-0710-1>
 
 ### Overview of contents
 
-This repository is our research compendium for our analysis of stone artefacts from Guanyingdong, China. The compendium contains all data, code, and text associated with the publication. The `Rmd` file in the `analysis/paper/` directory contain details of how all the analyses reported in the paper were conducted, as well as instructions on how to rerun the analysis to reproduce the results. The `data/` directory in the `analysis/` directory contains all the raw data. 
+This repository is our research compendium for our analysis of stone artefacts from Guanyingdong, China. The compendium contains all code and text associated with the publication. The `Rmd` file in the `analysis/paper/` directory contain details of how all the analyses reported in the paper were conducted, as well as instructions on how to rerun the analysis to reproduce the results.  
 
 ### The supplementary files
 
@@ -59,7 +59,7 @@ git clone https://github.com/benmarwick/guanyingdongstoneartefacts.git
 
 Once the download is complete, open the `guanyingdongstoneartefacts.Rproj` in RStudio to begin working with the package and compendium files. 
 
-The package has a number of dependencies on other R packages, and programs outside of R. These are listed in the docx file in the `/analysis/paper` directory. Installing these can be time-consuming and complicated, so we've done two things to simpify access to the compendium. First is the packrat directory, which contains the source code for all the packages we depend on. If all works well, these will be installed on your computer when you open `guanyingdongstoneartefacts.Rproj` in RStudio. Second is our Docker image that includes all the necessary software, code and data to run our analysis. The Docker image may give a quicker entry point to the project, and is more self-contained, so might save some fiddling with installing things.   
+The package has a number of dependencies on other R packages, and programs outside of R. These are listed in the docx file in the `/analysis/paper` directory. Our Docker image that includes all the necessary software, code and data to run our analysis. The Docker image may give a quicker entry point to the project, and is more self-contained, so might save some fiddling with installing things.   
 
 ### The Docker image 
 
@@ -87,8 +87,6 @@ See the colophon section of the docx file in `analysis/paper` for a full list of
 
 ### Contact
 
-Ben Marwick, Senior Research Scientist
-Centre for Archaeologica Science
-University of Wollongong
+Ben Marwick    
 benmarwick@gmail.com
 
