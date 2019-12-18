@@ -414,7 +414,9 @@ Combine plots of flake metrics and technological variables
 upper_lower_combo_plot <- 
 plot_grid(upper_lower_metric_plots, 
           upper_lower_categorical_plots_arranged,
-           labels = "AUTO", 
+                   labels = 'auto',
+                   label_fontfamily = 'Arial',
+                   label_fontface = 'bold',
                    ncol = 2, 
                    align = 'v', 
                    axis = 'lr', 

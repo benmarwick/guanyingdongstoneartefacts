@@ -151,7 +151,9 @@ flakes_clustered %>%
 figure_one <- 
 cowplot::plot_grid(flake_hist_with_clusters, 
                    flakes_clustered_numeric_vars_plot,
-                   labels = "AUTO", 
+                   labels = 'auto',
+                   label_fontfamily = 'Arial',
+                   label_fontface = 'bold',
                    ncol = 1, 
                    align = 'v', 
                    axis = 'lr', 
@@ -475,6 +477,9 @@ categorical_plots_arranged <-
 cowplot::plot_grid(plotlist = categorical_plots$plot,
                    align = "hv",
                    axis = "tblr",
+                   labels = 'auto',
+                   label_fontfamily = 'ariel',
+                   label_fontface = 'bold',
                    ncol = 2)
 
 save_plot("analysis/report/Extended_Data_Figure_Y.png", categorical_plots_arranged,

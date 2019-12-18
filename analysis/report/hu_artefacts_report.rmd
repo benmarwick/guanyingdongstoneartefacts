@@ -29,7 +29,8 @@ library(GGally)
 library(ggforce)
 # set working directory to source
 # original filename: artefacts (自动保存的).xls 
-file_name <- here::here("analysis/data/data_raw/artefacts-after Sam_Nov2017.xls") 
+# file_name <- here::here("analysis/data/data_raw/artefacts-after Sam_Nov2017.xls") 
+file_name <- here::here("analysis/data/data_raw/artefacts-notype.xls") 
 quiet_read <- purrr::quietly(readxl::read_excel)
 flakes <- quiet_read(file_name, sheet = "flake basics")$result
 cores <- quiet_read(file_name, sheet = "core basics")$result

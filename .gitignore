@@ -2,4 +2,4 @@
 .Rhistory
 .RData
 packrat/lib*/
-analysis/data
+analysis/data/data_raw/private
