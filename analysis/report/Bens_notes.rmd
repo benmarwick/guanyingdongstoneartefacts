@@ -11,7 +11,8 @@ library(dplyr)
 library(knitr)
 library(readxl)
 # install.packages("readxl")
-file_name <- "../data/artefacts (27 Jul 2016).xls" 
+# file_name <- "../data/artefacts (27 Jul 2016).xls" 
+
 flakes <- read_excel(file_name, sheet = "flake basics")
 cores <- read_excel(file_name, sheet = "core basics")
 debris <- read_excel(file_name, sheet = "chunk&debris")
@@ -566,6 +567,37 @@ plain_flakes %>%
 # look at CV of metric variables by size groups
 
 ```
+
+
+```{r}
+# t-test from YH on blade length and blade core length
+# from an excel sheet she sent me with only this
+
+blade_length <- c(53,
+                  107,
+                  49,
+                  52,
+                  44.1,
+                  83)
+
+blade_core_length <- c(19,
+                       35,
+                       21,
+                       22,
+                       25,
+                       75,
+                       55,
+                       40,
+                       47)
+
+t_test_output <- 
+  t.test(blade_length,
+       blade_core_length,
+       var.equal = TRUE)
+
+apastats::describe.ttest(t_test_output)
+```
+
 
 Setting up:
 

@@ -1,0 +1,122 @@
+---
+title: "Reply to reviewers"
+output: html_document
+date: "2024-03-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(tidyverse)
+
+file_name <- "../data/data_raw/Copy of artefacts original.xls" 
+
+flakes <- read_excel(file_name, sheet = "flake basics")
+cores <- read_excel(file_name, sheet = "core basics")
+debris <- read_excel(file_name, sheet = "chunk&debris")
+retouch <- read_excel(file_name, sheet = "retouch")
+```
+
+
+```{r}
+# Figure 9
+
+flakes_clean <- 
+  flakes %>% 
+  mutate(mass = parse_number(mass),
+         `Length/thickness ratio` = length / `Thickness at 50% max dim`)
+
+flake_hist_mass <- 
+ggplot(flakes_clean,
+       aes(mass)) +
+  geom_histogram() +
+  theme_minimal() +
+  xlab("Mass (g)")
+
+flake_dens_max <- 
+ggplot(flakes_clean,
+       aes(`max dimension`)) +
+  geom_density() +
+  theme_minimal() +
+  xlab("Maximum dimension (mm)")
+
+flake_lw_ratio <- 
+ggplot(flakes_clean,
+       aes(`Length/thickness ratio`)) +
+  geom_histogram() +
+  theme_minimal() +
+  geom_vline(xintercept = 3, colour = "red") +
+  xlab("Length/thickness ratio")
+
+flakes_clean_long_thick <- 
+  flakes_clean %>% 
+  select(starts_with("Thickness")) %>% 
+  pivot_longer(everything()) %>% 
+  mutate(name = str_remove(name, "Thickness at ")) %>% 
+  mutate(name = str_remove(name, " max dim"))
+
+flake_thick_dens <- 
+ggplot(flakes_clean_long_thick,
+       aes(value,
+           colour = name)) +
+  geom_density() +
+  theme_minimal() +
+  xlab("Thickness (mm)") +
+  theme(legend.position = c(0.75, 0.5))
+
+flakes_clean_long_width <- 
+  flakes_clean %>% 
+  select(starts_with("Width")) %>% 
+  pivot_longer(everything()) %>% 
+  mutate(name = str_remove(name, "Width at ")) %>% 
+  mutate(name = str_remove(name, " max dim"))
+
+flake_width_dens <- 
+ggplot(flakes_clean_long_width,
+       aes(value,
+           colour = name)) +
+  geom_density() +
+  theme_minimal() +
+  xlab("Width (mm)") +
+  scale_x_continuous(limits = c(0, 150)) +
+  theme(legend.position = c(0.75, 0.5))
+
+flake_cortex_prop <- 
+  ggplot(flakes_clean,
+       aes(`cortex percentage`)) +
+  geom_bar() +
+  theme_minimal() +
+  xlab("Cortex proportion (%)")
+
+flakes_clean_facetted_plat <- 
+  flakes_clean %>% 
+  mutate(platform = case_when(
+    str_detect(platform, "fac") ~ "facetted",
+    .default = "unfacetted"
+  ))
+
+flake_dens_max_fac <- 
+ggplot(flakes_clean_facetted_plat,
+       aes(`max dimension`,
+           colour = platform)) +
+  geom_density() +
+  theme_minimal() +
+  xlab("Maximum dimension (mm)")  +
+  theme(legend.position = c(0.75, 0.5))
+
+flake_scar_count <- 
+  ggplot(flakes_clean,
+       aes(`scar number`)) +
+  geom_bar() +
+  theme_minimal() +
+  xlab("Number of scars")
+
+
+
+  
+
+```
+
