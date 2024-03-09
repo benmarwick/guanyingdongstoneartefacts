@@ -34,22 +34,30 @@ ggplot(flakes_clean,
        aes(mass)) +
   geom_histogram() +
   theme_minimal() +
-  xlab("Mass (g)")
+  xlab("Mass (g)") +
+  ylab("Number of flakes")
 
 flake_dens_max <- 
 ggplot(flakes_clean,
        aes(`max dimension`)) +
   geom_density() +
   theme_minimal() +
-  xlab("Maximum dimension (mm)")
+  xlab("Maximum dimension (mm)") +
+  ylab("Density")
+
+flake_lw_ratio_median <- 
+  median(flakes_clean$`Length/thickness ratio`,
+         na.rm = TRUE)
 
 flake_lw_ratio <- 
 ggplot(flakes_clean,
        aes(`Length/thickness ratio`)) +
   geom_histogram() +
   theme_minimal() +
-  geom_vline(xintercept = 3, colour = "red") +
-  xlab("Length/thickness ratio")
+  geom_vline(xintercept = flake_lw_ratio_median, 
+             colour = "red") +
+  xlab("Length/thickness ratio") +
+  ylab("Number of flakes")
 
 flakes_clean_long_thick <- 
   flakes_clean %>% 
@@ -65,7 +73,9 @@ ggplot(flakes_clean_long_thick,
   geom_density() +
   theme_minimal() +
   xlab("Thickness (mm)") +
-  theme(legend.position = c(0.75, 0.5))
+  theme(legend.position = c(0.75, 0.5)) +
+  ylab("Density") +
+   guides(colour = guide_legend("Thickness at % of\nmaximum\ndimension"))
 
 flakes_clean_long_width <- 
   flakes_clean %>% 
@@ -82,14 +92,17 @@ ggplot(flakes_clean_long_width,
   theme_minimal() +
   xlab("Width (mm)") +
   scale_x_continuous(limits = c(0, 150)) +
-  theme(legend.position = c(0.75, 0.5))
+  theme(legend.position = c(0.75, 0.5)) +
+  guides(colour = guide_legend("Width at % of\nmaximum\ndimension")) +
+  ylab("Density")
 
 flake_cortex_prop <- 
   ggplot(flakes_clean,
        aes(`cortex percentage`)) +
   geom_bar() +
   theme_minimal() +
-  xlab("Cortex proportion (%)")
+  xlab("Cortex proportion (%)") +
+  ylab("Number of flakes")
 
 flakes_clean_facetted_plat <- 
   flakes_clean %>% 
@@ -105,17 +118,64 @@ ggplot(flakes_clean_facetted_plat,
   geom_density() +
   theme_minimal() +
   xlab("Maximum dimension (mm)")  +
-  theme(legend.position = c(0.75, 0.5))
+  theme(legend.position = c(0.75, 0.5)) +
+  ylab("Density") 
 
 flake_scar_count <- 
   ggplot(flakes_clean,
        aes(`scar number`)) +
   geom_bar() +
   theme_minimal() +
-  xlab("Number of scars")
+  xlab("Number of scars") +
+  ylab("Number of flakes")
+
+flakes_clean_5_scars <- 
+flakes_clean %>% 
+  mutate(more_than_five_scars = ifelse(`scar number` <5, 
+                                       "less than 5",
+                                       "more than 5")) %>% 
+  drop_na(more_than_five_scars)
+
+integer_breaks <- function(n = 5, ...) {
+  fxn <- function(x) {
+    breaks <- floor(pretty(x, n, ...))
+    names(breaks) <- attr(breaks, "labels")
+    breaks
+  }
+  return(fxn)
+}
+
+flake_scar_by_mass <- 
+  ggplot(flakes_clean_5_scars,
+       aes(`scar number`, 
+           group = `scar number`,
+           mass
+           )) +
+  geom_boxplot() +
+  theme_minimal() +
+  xlab("Number of scars") +
+  ylab("Mass (g)") +
+  scale_x_continuous(breaks = integer_breaks(10)) +
+  scale_y_log10()
 
 
+library(cowplot)
 
+# Statistical results for flakes. (a-d) The counts of flakes for different mass, different length/thickness ratios (dotted line shows the median value), cortex proportion and number of dorsal scars. (e-g) Density distribution of flakes for different maximum dimension, thickness, and width. (h) Comparison of density distributions of flakes with and without faceted platforms. (i) Box plots showing the mass difference between flakes by scar number. 
+
+plot_grid(
+  flake_hist_mass,    flake_lw_ratio, flake_cortex_prop, 
+  flake_scar_count,   flake_dens_max, flake_thick_dens,
+  flake_width_dens,   flake_dens_max_fac,  flake_scar_by_mass,
+  nrow = 3,
+  ncol = 3,
+  labels = "auto"
+)
+
+ggsave("figure_9.png",
+       h = 9, 
+       w = 9,
+       bg = "white")
   
 
 ```
